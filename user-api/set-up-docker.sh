@@ -37,7 +37,6 @@ fi
 MYSQL_ROOT_PASSWORD=$1
 DB_USER_NAME=$2
 DB_USER_PASSWORD=$3
-PROJECT_NAME=$4
 
 if [ ! "$(docker ps -a | grep mysql-container)" ]; then
     echo "Starting MySQL container..."
@@ -48,10 +47,10 @@ if [ ! "$(docker ps -a | grep mysql-container)" ]; then
     sleep 30
 
     # create database
-    sudo docker exec mysql-container mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE IF NOT EXISTS $PROJECT_NAME;"
+    sudo docker exec mysql-container mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE IF NOT EXISTS users;"
 
     # create user and grant privileges
-    sudo docker exec mysql-container mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS '$DB_USER_NAME'@'%' IDENTIFIED BY '$DB_USER_PASSWORD'; GRANT ALL PRIVILEGES ON $PROJECT_NAME.* TO '$DB_USER_NAME'@'%'; FLUSH PRIVILEGES;"
+    sudo docker exec mysql-container mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS '$DB_USER_NAME'@'%' IDENTIFIED BY '$DB_USER_PASSWORD'; GRANT ALL PRIVILEGES ON users.* TO '$DB_USER_NAME'@'%'; FLUSH PRIVILEGES;"
 fi
 
 echo "Docker setup complete."
