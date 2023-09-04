@@ -1,0 +1,78 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.14'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+group = 'personal.yeongyulgori.user'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2021.0.1")
+}
+
+dependencies {
+
+    // spring boot
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation:3.0.4'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // json
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+
+    // swagger
+    implementation 'io.springfox:springfox-boot-starter:3.0.0'
+    implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+
+    // feign
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+    // modelmapper
+    implementation 'org.modelmapper:modelmapper:3.1.1'
+
+    // mysql
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // h2
+    testCompileOnly 'com.h2database:h2'
+
+    // test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+task printProjectName {
+    doLast {
+        println rootProject.name
+    }
+}
+
+task printProjectVersion {
+    doLast {
+        println version
+    }
+}
+
+jar {
+    enabled = false
+}
