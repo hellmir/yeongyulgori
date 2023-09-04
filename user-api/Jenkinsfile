@@ -39,7 +39,7 @@ pipeline {
             steps {
                 script {
                     def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}"
-                    sh "docker build -t ${dockerImageTag} -f ${WORKSPACE}/Dockerfile ${WORKSPACE}"
+                    sh "docker build -t ${dockerImageTag} -f ${WORKSPACE}/user-api/Dockerfile ${WORKSPACE}/user-api"
                 }
             }
         }
