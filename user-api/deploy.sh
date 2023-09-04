@@ -23,7 +23,7 @@ docker run -d \
     --name $PROJECT_NAME \
     --network=docker-network \
     -p 610:8080 \
-    -e SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/${PROJECT_NAME} \
+    -e SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/users \
     -e SPRING_DATASOURCE_USERNAME=$DB_USER_NAME \
     -e SPRING_DATASOURCE_PASSWORD=$DB_USER_PASSWORD \
     $DOCKER_IMAGE_TAG > ${HOME}/log.out 2> ${HOME}/err.out
