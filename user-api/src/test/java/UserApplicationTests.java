@@ -5,7 +5,6 @@ import org.springframework.test.context.TestPropertySource;
 import personal.yeongyulgori.user.UserApplication;
 
 @TestPropertySource("classpath:application-test.properties")
-@SpringBootTest
 @ContextConfiguration(classes = UserApplication.class)
 public class UserApplicationTests {
 
