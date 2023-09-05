@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.util.Locale;
 
 import static javax.persistence.EnumType.STRING;
-import static personal.yeongyulgori.user.constant.Role.GENERAL_USER;
 
 @Entity(name = "users")
 @Getter
@@ -57,18 +56,18 @@ public class User extends BaseEntity {
     private boolean verify;
 
     @Builder
-    private User(Long id, String name, String email, String password, LocalDate birthDate,
-                 String phoneNumber, Address address, byte[] profileImage,
+    private User(String name, String email, String password, LocalDate birthDate,
+                 String phoneNumber, Address address, byte[] profileImage, Role role,
                  LocalDateTime createdAt, LocalDateTime modifiedAt) {
 
-        this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
         this.birthDate = birthDate;
         this.phoneNumber = phoneNumber;
         this.address = address;
-        this.role = GENERAL_USER;
+        this.role = role;
+        this.profileImage = profileImage;
 
         setCreatedAt(createdAt);
 
@@ -85,6 +84,7 @@ public class User extends BaseEntity {
                 .birthDate(signUpForm.getBirthDate())
                 .phoneNumber(signUpForm.getPhoneNumber())
                 .address(signUpForm.getAddress())
+                .role(signUpForm.getRole())
                 .profileImage(signUpForm.getProfileImage())
                 .build();
 

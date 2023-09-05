@@ -1,6 +1,7 @@
 package personal.yeongyulgori.user.dto;
 
 import lombok.Data;
+import personal.yeongyulgori.user.constant.Role;
 import personal.yeongyulgori.user.domain.Address;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ public class UserResponseDto {
     private LocalDate birthDate;
     private String phoneNumber;
     private Address address;
+    private Role role;
     private byte[] profileImage;
 
 }
