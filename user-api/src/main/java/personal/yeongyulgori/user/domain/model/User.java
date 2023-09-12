@@ -26,6 +26,9 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String username;
+
     @Column(nullable = false, length = 10)
     private String name;
 
@@ -56,10 +59,11 @@ public class User extends BaseEntity {
     private boolean verify;
 
     @Builder
-    private User(String name, String email, String password, LocalDate birthDate,
-                 String phoneNumber, Address address, byte[] profileImage, Role role,
-                 LocalDateTime createdAt, LocalDateTime modifiedAt) {
+    private User(String username, String name, String email, String password,
+                 LocalDate birthDate, String phoneNumber, Address address, byte[] profileImage,
+                 Role role, LocalDateTime createdAt, LocalDateTime modifiedAt) {
 
+        this.username = username;
         this.name = name;
         this.email = email;
         this.password = password;
@@ -78,6 +82,7 @@ public class User extends BaseEntity {
     public static User from(SignUpForm signUpForm) {
 
         return User.builder()
+                .username(signUpForm.getUsername())
                 .name(signUpForm.getName())
                 .email(signUpForm.getEmail().toLowerCase(Locale.ROOT))
                 .password(signUpForm.getPassword())
