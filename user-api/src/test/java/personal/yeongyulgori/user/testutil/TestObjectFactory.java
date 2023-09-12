@@ -11,10 +11,11 @@ import static org.mockito.Mockito.mock;
 
 public class TestObjectFactory {
 
-    public static SignUpForm enterUserForm(String name, String email, String password,
+    public static SignUpForm enterUserForm(String userName, String name, String email, String password,
                                            LocalDate birthDate, String phoneNumber, Role role) {
 
         return SignUpForm.builder()
+                .userName(userName)
                 .name(name)
                 .email(email)
                 .password(password)
@@ -27,11 +28,12 @@ public class TestObjectFactory {
 
     }
 
-    public static User createUser(String name, String email, String password, LocalDate birthDate,
-                                  String phoneNumber, Role role) {
+    public static User createUser(String userName, String name, String email, String password,
+                                  LocalDate birthDate, String phoneNumber, Role role) {
 
 
         return User.builder()
+                .userName(userName)
                 .name(name)
                 .email(email)
                 .password(password)
