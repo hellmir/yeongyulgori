@@ -11,13 +11,14 @@ import static org.mockito.Mockito.mock;
 
 public class TestObjectFactory {
 
-    public static SignUpForm enterUserForm(String name, String email, String password,
+    public static SignUpForm enterUserForm(String email, String username, String password, String name,
                                            LocalDate birthDate, String phoneNumber, Role role) {
 
         return SignUpForm.builder()
-                .name(name)
                 .email(email)
+                .username(username)
                 .password(password)
+                .name(name)
                 .birthDate(birthDate)
                 .phoneNumber(phoneNumber)
                 .address(mock(Address.class))
@@ -27,14 +28,14 @@ public class TestObjectFactory {
 
     }
 
-    public static User createUser(String name, String email, String password, LocalDate birthDate,
-                                  String phoneNumber, Role role) {
-
+    public static User createUser(String email, String username, String password, String name,
+                                  LocalDate birthDate, String phoneNumber, Role role) {
 
         return User.builder()
-                .name(name)
                 .email(email)
+                .username(username)
                 .password(password)
+                .name(name)
                 .birthDate(birthDate)
                 .phoneNumber(phoneNumber)
                 .address(mock(Address.class))
