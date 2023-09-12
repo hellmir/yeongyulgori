@@ -109,8 +109,8 @@ class UserRepositoryTest {
         assertThat(selectedBusinessUsers).hasSize(2)
                 .extracting("email", "username", "name", "role")
                 .containsExactlyInAnyOrder(
-                        tuple("abcd@abcd.com","person2", "고길동",  BUSINESS_USER),
-                        tuple("abcd@abcdef.com","person4", "길동",  BUSINESS_USER)
+                        tuple("abcd@abcd.com", "person2", "고길동", BUSINESS_USER),
+                        tuple("abcd@abcdef.com", "person4", "길동", BUSINESS_USER)
                 );
 
     }

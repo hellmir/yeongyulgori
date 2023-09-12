@@ -34,7 +34,7 @@ class SignUpUserServiceTest {
 
         // given
         SignUpForm signUpForm = enterUserForm
-                (email, username,   password, name,birthDate, phoneNumber, role);
+                (email, username, password, name, birthDate, phoneNumber, role);
 
         // when
         UserResponseDto userResponseDto = signUpUserService.signUpUser(signUpForm);
