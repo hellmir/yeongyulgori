@@ -10,8 +10,9 @@ import java.time.LocalDate;
 public class UserResponseDto {
 
     private Long id;
-    private String name;
     private String email;
+    private String username;
+    private String name;
     private LocalDate birthDate;
     private String phoneNumber;
     private Address address;

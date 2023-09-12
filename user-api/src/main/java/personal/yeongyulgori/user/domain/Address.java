@@ -1,14 +1,12 @@
 package personal.yeongyulgori.user.domain;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotBlank;
 
 @Embeddable
 @Getter
-@NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Address {
 
     @NotBlank(message = "지역 정보는 필수값입니다.")
