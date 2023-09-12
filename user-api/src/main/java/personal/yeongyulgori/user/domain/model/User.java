@@ -26,17 +26,17 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 20)
-    private String username;
-
-    @Column(nullable = false, length = 10)
-    private String name;
-
     @Column(nullable = false, unique = true, length = 30)
     private String email;
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String username;
+
     @Column(nullable = false, length = 30)
     private String password;
+
+    @Column(nullable = false, length = 10)
+    private String name;
 
     @Column(nullable = false)
     private LocalDate birthDate;
@@ -59,14 +59,14 @@ public class User extends BaseEntity {
     private boolean verify;
 
     @Builder
-    private User(String username, String name, String email, String password,
+    private User(String email, String username, String password, String name,
                  LocalDate birthDate, String phoneNumber, Address address, byte[] profileImage,
                  Role role, LocalDateTime createdAt, LocalDateTime modifiedAt) {
 
-        this.username = username;
-        this.name = name;
         this.email = email;
+        this.username = username;
         this.password = password;
+        this.name = name;
         this.birthDate = birthDate;
         this.phoneNumber = phoneNumber;
         this.address = address;
@@ -82,10 +82,10 @@ public class User extends BaseEntity {
     public static User from(SignUpForm signUpForm) {
 
         return User.builder()
-                .username(signUpForm.getUsername())
-                .name(signUpForm.getName())
                 .email(signUpForm.getEmail().toLowerCase(Locale.ROOT))
+                .username(signUpForm.getUsername())
                 .password(signUpForm.getPassword())
+                .name(signUpForm.getName())
                 .birthDate(signUpForm.getBirthDate())
                 .phoneNumber(signUpForm.getPhoneNumber())
                 .address(signUpForm.getAddress())

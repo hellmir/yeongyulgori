@@ -12,10 +12,10 @@ import java.time.LocalDate;
 @Builder
 public class SignUpForm {
 
-    private String username;
-    private String name;
     private String email;
+    private String username;
     private String password;
+    private String name;
     private LocalDate birthDate;
     private String phoneNumber;
     private Address address;
