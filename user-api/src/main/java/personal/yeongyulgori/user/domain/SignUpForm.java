@@ -3,12 +3,10 @@ package personal.yeongyulgori.user.domain;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import personal.yeongyulgori.user.constant.Role;
 
 import java.time.LocalDate;
 
-@NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Builder
