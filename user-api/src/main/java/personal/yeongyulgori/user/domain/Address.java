@@ -8,7 +8,6 @@ import javax.validation.constraints.NotBlank;
 
 @Embeddable
 @Getter
-@NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Address {
 
     @NotBlank(message = "지역 정보는 필수값입니다.")
