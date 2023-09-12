@@ -32,27 +32,28 @@ class UserRepositoryTest {
     @DisplayName("이메일 주소를 통해 해당 이메일 주소로 가입한 회원을 찾을 수 있다.")
     @ParameterizedTest
     @CsvSource({
-            "홍길동, abcd@abc.com, 1234, 1990-01-01, 01012345678, GENERAL_USER",
-            "고길동, abcd@abcd.com, 12345, 2000-02-02, 01012345679, BUSINESS_USER",
-            "김길동, abcd@abcde.com, 123456, 2010-03-03, 01012345680, GENERAL_USER"
+            "person1, 홍길동, abcd@abc.com, 1234, 1990-01-01, 01012345678, GENERAL_USER",
+            "person2, 고길동, abcd@abcd.com, 12345, 2000-02-02, 01012345679, BUSINESS_USER",
+            "person3, 김길동, abcd@abcde.com, 123456, 2010-03-03, 01012345680, GENERAL_USER"
     })
-    void findByEmail(String name, String email, String password, LocalDate birthDate,
-                     String phoneNumber, Role role) {
+    void findByEmail(String userName, String name, String email, String password,
+                     LocalDate birthDate, String phoneNumber, Role role) {
 
         // given
-        User user = createUser(name, email, password, birthDate, phoneNumber, role);
+        User user = createUser(userName, name, email, password, birthDate, phoneNumber, role);
 
         userRepository.save(user);
 
         // when
-        User findedUser = userRepository.findByEmail(email)
+        User foundUser = userRepository.findByEmail(email)
                 .orElseThrow();
 
         // then
-        assertThat(findedUser.getName()).isEqualTo(name);
-        assertThat(findedUser.getEmail()).isEqualTo(email);
-        assertThat(findedUser.getPassword()).isEqualTo(password);
-        assertThat(findedUser.getRole()).isEqualTo(role);
+        assertThat(foundUser.getUserName()).isEqualTo(userName);
+        assertThat(foundUser.getName()).isEqualTo(name);
+        assertThat(foundUser.getEmail()).isEqualTo(email);
+        assertThat(foundUser.getPassword()).isEqualTo(password);
+        assertThat(foundUser.getRole()).isEqualTo(role);
 
     }
 
@@ -61,8 +62,7 @@ class UserRepositoryTest {
     void findByEmailWithNonExistentEmail() {
 
         // given
-
-        User user = createUser("홍길동", "abcd@abc.com", "1234",
+        User user = createUser("person1", "홍길동", "abcd@abc.com", "1234",
                 LocalDate.of(1990, 01, 01), "01012345678", GENERAL_USER);
 
         userRepository.save(user);
@@ -80,38 +80,37 @@ class UserRepositoryTest {
     void findAllByRole() {
 
         // given
-
-        User user1 = createUser("홍길동", "abcd@abc.com", "1234",
+        User user1 = createUser("person1", "홍길동", "abcd@abc.com", "1234",
                 LocalDate.of(1990, 01, 01), "01012345678", GENERAL_USER);
 
-        User user2 = createUser("고길동", "abcd@abcd.com", "12345",
+        User user2 = createUser("person2", "고길동", "abcd@abcd.com", "12345",
                 LocalDate.of(2000, 02, 10), "01012345679", BUSINESS_USER);
 
-        User user3 = createUser("김길동", "abcd@abcde.com", "123456",
+        User user3 = createUser("person3", "김길동", "abcd@abcde.com", "123456",
                 LocalDate.of(2010, 03, 20), "01012345670", GENERAL_USER);
 
-        User user4 = createUser("길동", "abcd@abcdef.com", "1234567",
+        User user4 = createUser("person4", "길동", "abcd@abcdef.com", "1234567",
                 LocalDate.of(2020, 04, 30), "01012345671", BUSINESS_USER);
 
         userRepository.saveAll(List.of(user1, user2, user3, user4));
 
         // when
-        List<User> selectedUsers1 = userRepository.findAllByRole(GENERAL_USER);
-        List<User> selectedUsers2 = userRepository.findAllByRole(BUSINESS_USER);
+        List<User> selectedGeneralUsers = userRepository.findAllByRole(GENERAL_USER);
+        List<User> selectedBusinessUsers = userRepository.findAllByRole(BUSINESS_USER);
 
         // then
-        assertThat(selectedUsers1).hasSize(2)
-                .extracting("name", "email", "role")
+        assertThat(selectedGeneralUsers).hasSize(2)
+                .extracting("userName", "name", "email", "role")
                 .containsExactlyInAnyOrder(
-                        tuple("홍길동", "abcd@abc.com", GENERAL_USER),
-                        tuple("김길동", "abcd@abcde.com", GENERAL_USER)
+                        tuple("person1", "홍길동", "abcd@abc.com", GENERAL_USER),
+                        tuple("person3", "김길동", "abcd@abcde.com", GENERAL_USER)
                 );
 
-        assertThat(selectedUsers2).hasSize(2)
-                .extracting("name", "email", "role")
+        assertThat(selectedBusinessUsers).hasSize(2)
+                .extracting("userName", "name", "email", "role")
                 .containsExactlyInAnyOrder(
-                        tuple("고길동", "abcd@abcd.com", BUSINESS_USER),
-                        tuple("길동", "abcd@abcdef.com", BUSINESS_USER)
+                        tuple("person2", "고길동", "abcd@abcd.com", BUSINESS_USER),
+                        tuple("person4", "길동", "abcd@abcdef.com", BUSINESS_USER)
                 );
 
     }
