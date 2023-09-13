@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 @Builder
-public class SendMailForm {
+public class EmailForm {
 
     private String from;
     private String to;
