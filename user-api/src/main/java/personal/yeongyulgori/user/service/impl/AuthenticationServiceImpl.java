@@ -40,10 +40,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new DuplicateUserException("이미 가입된 회원입니다. email: " + signUpForm.getEmail());
         }
 
-        try {
-
-            User savedUser = userRepository.save(User.from(signUpForm));
-
             log.info("User signed up successfully for email: {}, username: {}",
                     savedUser.getEmail(), savedUser.getUsername());
 
@@ -51,14 +47,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(), savedUser.getRole()
             );
 
-        } catch (IOException e) {
-
-            log.error("IOException occurred while converting the profileImage: ", e);
-
-            throw new FailedToConvertImageFileException
-                    ("프로필 이미지 파일 변환에 실패했습니다. username: " + signUpForm.getUsername());
-
-        }
 
     }
 
@@ -84,7 +72,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserResponseDto updateUserInformations(String username, InformationUpdateForm informationUpdateForm) {
 
         log.info("Beginning to update user information for username: {}", username);
 
@@ -92,22 +79,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .orElseThrow(() -> new EntityNotFoundException
                         ("해당 회원이 존재하지 않습니다. username: " + username));
 
-        try {
-
             User updatedUser = userRepository.save(user.withForm(username, informationUpdateForm));
 
             log.info("User information updated successfully for username: {}", updatedUser.getUsername());
 
             return UserResponseDto.from(updatedUser);
 
-        } catch (IOException e) {
 
-            log.error("IOException occurred while converting the profileImage: ", e);
 
-            throw new FailedToConvertImageFileException
-                    ("프로필 이미지 파일 변환에 실패했습니다. username: " + username);
-
-        }
 
     }
 

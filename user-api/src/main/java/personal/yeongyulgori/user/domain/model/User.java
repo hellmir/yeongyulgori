@@ -7,14 +7,14 @@ import lombok.NoArgsConstructor;
 import personal.yeongyulgori.user.base.BaseEntity;
 import personal.yeongyulgori.user.constant.Role;
 import personal.yeongyulgori.user.domain.Address;
-import personal.yeongyulgori.user.domain.CrucialInformationUpdateForm;
 import personal.yeongyulgori.user.domain.InformationUpdateForm;
 import personal.yeongyulgori.user.domain.SignUpForm;
+import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 
 import javax.persistence.*;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -84,7 +84,11 @@ public class User extends BaseEntity {
 
     }
 
-    public static User from(SignUpForm signUpForm) throws IOException {
+    public static User from(SignUpForm signUpForm) {
+
+        byte[] decodedImage = Optional.ofNullable(signUpForm.getProfileImage())
+                .map(Base64.getDecoder()::decode)
+                .orElse(null);
 
         return User.builder()
                 .email(signUpForm.getEmail())
@@ -95,27 +99,16 @@ public class User extends BaseEntity {
                 .phoneNumber(signUpForm.getPhoneNumber())
                 .address(signUpForm.getAddress())
                 .role(signUpForm.getRole())
-                .profileImage(
-                        signUpForm.getProfileImage() != null
-                                ? signUpForm.getProfileImage().getBytes()
-                                : new byte[]{
-                                (byte) 0x89, (byte) 0x50, (byte) 0x4E, (byte) 0x47, (byte) 0x0D, (byte) 0x0A,
-                                (byte) 0x1A, (byte) 0x0A, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x0D,
-                                (byte) 0x49, (byte) 0x48, (byte) 0x44, (byte) 0x52, (byte) 0x00, (byte) 0x00,
-                                (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01,
-                                (byte) 0x08, (byte) 0x06, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1F,
-                                (byte) 0x15, (byte) 0xC4, (byte) 0x89, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                                (byte) 0x0A, (byte) 0x49, (byte) 0x44, (byte) 0x41, (byte) 0x54, (byte) 0x78,
-                                (byte) 0x9C, (byte) 0x63, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x02,
-                                (byte) 0x00, (byte) 0x01, (byte) 0x49, (byte) 0x45, (byte) 0x4E, (byte) 0x44,
-                                (byte) 0xAE, (byte) 0x42, (byte) 0x60, (byte) 0x82
-                        }
-                )
+                .profileImage(decodedImage)
                 .build();
 
     }
 
-    public User withForm(String username, InformationUpdateForm informationUpdateForm) throws IOException {
+    public User withForm(String username, InformationUpdateForm informationUpdateForm) {
+
+        byte[] decodedImage = Optional.ofNullable(informationUpdateForm.getProfileImage())
+                .map(Base64.getDecoder()::decode)
+                .orElse(null);
 
         return User.builder()
                 .id(id)
@@ -127,24 +120,21 @@ public class User extends BaseEntity {
                 .phoneNumber(phoneNumber)
                 .address(Optional.ofNullable(informationUpdateForm.getAddress()).orElse(address))
                 .role(Optional.ofNullable(informationUpdateForm.getRole()).orElse(role))
-                .profileImage(
-                        informationUpdateForm.getProfileImage() != null ?
-                                informationUpdateForm.getProfileImage().getBytes() : profileImage
-                )
+                .profileImage(Optional.ofNullable(decodedImage).orElse(profileImage))
                 .build();
 
     }
 
-    public User withCrucialForm(CrucialInformationUpdateForm crucialInformationUpdateForm) {
+    public User withCrucialForm(CrucialInformationUpdateDto crucialInformationUpdateDto) {
 
         return User.builder()
                 .id(id)
-                .email(Optional.ofNullable(crucialInformationUpdateForm.getEmail()).orElse(email))
+                .email(Optional.ofNullable(crucialInformationUpdateDto.getEmail()).orElse(email))
                 .username(username)
-                .password(Optional.ofNullable(crucialInformationUpdateForm.getPassword()).orElse(password))
+                .password(Optional.ofNullable(crucialInformationUpdateDto.getPassword()).orElse(password))
                 .name(name)
                 .birthDate(birthDate)
-                .phoneNumber(Optional.ofNullable(crucialInformationUpdateForm.getPhoneNumber()).orElse(phoneNumber))
+                .phoneNumber(Optional.ofNullable(crucialInformationUpdateDto.getPhoneNumber()).orElse(phoneNumber))
                 .address(address)
                 .role(role)
                 .profileImage(profileImage)

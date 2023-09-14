@@ -2,7 +2,6 @@ package personal.yeongyulgori.user.domain;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
-import org.springframework.web.multipart.MultipartFile;
 import personal.yeongyulgori.user.constant.Role;
 
 import javax.validation.constraints.Email;
@@ -48,6 +47,6 @@ public class SignUpForm {
     private Role role;
 
     @ApiModelProperty(value = "프로필 이미지 파일")
-    private MultipartFile profileImage;
+    private String profileImage;
 
 }
