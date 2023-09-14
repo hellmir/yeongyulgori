@@ -114,7 +114,7 @@ class AuthenticationServiceTest {
         // when, then
         assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
                 .isInstanceOf(DuplicateUserException.class)
-                .hasMessage("이미 가입된 회원입니다. username: " + signUpForm2.getUsername());
+                .hasMessage("중복된 사용자 이름입니다. username: " + signUpForm2.getUsername());
 
     }
 

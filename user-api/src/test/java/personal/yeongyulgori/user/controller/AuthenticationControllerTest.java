@@ -24,6 +24,7 @@ import personal.yeongyulgori.user.service.AutoCompleteService;
 import java.time.LocalDate;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -159,7 +160,7 @@ class AuthenticationControllerTest {
         UserResponseDto userResponseDto = UserResponseDto.from(user);
 
         when(authenticationService
-                .updateUserInformation(any(String.class), any(InformationUpdateForm.class)))
+                .updateUserInformation(eq(username), any(InformationUpdateForm.class)))
                 .thenReturn(userResponseDto);
 
         // when, then
@@ -201,7 +202,7 @@ class AuthenticationControllerTest {
         UserResponseDto userResponseDto = UserResponseDto.from(user);
 
         when(authenticationService
-                .updateUserInformation(any(String.class), any(InformationUpdateForm.class)))
+                .updateUserInformation(eq(username), any(InformationUpdateForm.class)))
                 .thenReturn(userResponseDto);
 
         // when, then
