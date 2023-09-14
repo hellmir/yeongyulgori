@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 30)
     public Page<UserResponseDto> getSearchedUsers(String keyword, Pageable pageable) {
 
-        log.info("Beginning to retrieve searched users");
+        log.info("Beginning to retrieve searched users by keyword");
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -63,8 +63,8 @@ public class UserServiceImpl implements UserService {
 
         stopWatch.stop();
 
-        log.info("Searched users retrieved successfully\n Retrieving task execution time: {} ms",
-                stopWatch.getTotalTimeMillis());
+        log.info("Searched users retrieved successfully: {}\n Retrieving task execution time: {} ms",
+                keyword, stopWatch.getTotalTimeMillis());
 
         return new PageImpl<>(userResponseDtos, pageable, users.getTotalElements());
 
