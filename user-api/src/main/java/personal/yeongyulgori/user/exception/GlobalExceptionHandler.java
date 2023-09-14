@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(AbstractGeneralException.class)
-    protected ResponseEntity<ErrorResponse> handleGeneralException(AbstractGeneralException e) {
+    private ResponseEntity<ErrorResponse> handleGeneralExceptions(AbstractGeneralException e) {
 
         log.info("Exception occurred: {}", e.getMessage(), e);
 
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AbstractSignificantException.class)
-    public ResponseEntity<ErrorResponse> handleSignificantException
+    private ResponseEntity<ErrorResponse> handleSignificantExceptions
             (AbstractSignificantException e) {
 
         log.warn("Warning exception occurred: {}", e.getMessage(), e);
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AbstractSeriousException.class)
-    public ResponseEntity<ErrorResponse> handleAbstractSeriousException
+    private ResponseEntity<ErrorResponse> handleSeriousExceptions
             (AbstractSeriousException e) {
 
         log.error("Error exception occurred: {}", e.getMessage(), e);
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException
+    private ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException
             (MethodArgumentNotValidException e) {
 
         log.info("Exception occurred: {}", e.getMessage(), e);
@@ -79,7 +79,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException
+    private ResponseEntity<ErrorResponse> handleIllegalArgumentException
             (IllegalArgumentException e) {
 
         log.info("Exception occurred: {}", e.getMessage(), e);
@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleEntityNotFoundException
+    private ResponseEntity<ErrorResponse> handleEntityNotFoundException
             (EntityNotFoundException e) {
 
         log.warn("Warning exception occurred: {}", e.getMessage(), e);
@@ -110,7 +110,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(IOException.class)
-    public ResponseEntity<ErrorResponse> handleIOException
+    private ResponseEntity<ErrorResponse> handleIOException
             (IOException e) {
 
         log.error("Error exception occurred: {}", e.getMessage(), e);
@@ -125,7 +125,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity<ErrorResponse> handleNullPointerException
+    private ResponseEntity<ErrorResponse> handleNullPointerException
             (NullPointerException e) {
 
         log.error("Error exception occurred: {}", e.getMessage(), e);
