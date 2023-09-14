@@ -135,7 +135,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         if (userRepository.existsByUsername(username)) {
-            throw new DuplicateUserException("이미 가입된 회원입니다. username: " + username);
+            throw new DuplicateUserException("중복된 사용자 이름입니다. username: " + username);
         }
 
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
