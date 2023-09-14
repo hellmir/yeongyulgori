@@ -9,10 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import personal.yeongyulgori.user.domain.CrucialInformationUpdateForm;
 import personal.yeongyulgori.user.domain.InformationUpdateForm;
 import personal.yeongyulgori.user.domain.SignInForm;
 import personal.yeongyulgori.user.domain.SignUpForm;
+import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.dto.UserResponseDto;
 import personal.yeongyulgori.user.service.AuthenticationService;
 import personal.yeongyulgori.user.service.AutoCompleteService;
@@ -38,7 +38,7 @@ public class AuthenticationController {
 
         UserResponseDto userResponseDto = authenticationService.signUpUser(signUpForm);
 
-        autoCompleteService.addAutocompleteKeyWord(userResponseDto.getName());
+        autoCompleteService.addAutoCompleteKeyWord(userResponseDto.getName());
 
         return buildResponse(userResponseDto);
 
@@ -58,7 +58,9 @@ public class AuthenticationController {
 
     @ApiOperation(value = "회원 개인정보 조회", notes = "사용자 이름을 입력해 회원 개인정보를 조회할 수 있습니다.")
     @GetMapping("{username}/details")
-    public ResponseEntity<UserResponseDto> getUserInformation(@PathVariable String username) {
+    public ResponseEntity<UserResponseDto> getUserInformation(
+            @PathVariable @ApiParam(value = "사용자 이름", example = "gildong1234") String username
+    ) {
 
         UserResponseDto userResponseDto = authenticationService.getUserDetails(username);
 
@@ -69,14 +71,14 @@ public class AuthenticationController {
     @ApiOperation(value = "회원 정보 수정",
             notes = "수정할 변수(id 제외)를 1개 또는 여러 개 입력해 회원 정보를 수정할 수 있습니다.")
     @PatchMapping("{username}")
-    public ResponseEntity<UserResponseDto> updateMemberInformation(
+    public ResponseEntity<UserResponseDto> updateUserInformation(
             @ApiParam(value = "사용자 이름", example = "gildong1234") @PathVariable String username,
             @Valid @RequestBody @ApiParam(value = "회원 정보 수정 양식")
             InformationUpdateForm informationUpdateForm
     ) {
 
         UserResponseDto userResponseDto = authenticationService
-                .updateUserInformations(username, informationUpdateForm);
+                .updateUserInformation(username, informationUpdateForm);
 
         return username.equals(userResponseDto.getUsername()) ?
                 ResponseEntity.status(HttpStatus.OK).body(userResponseDto) : buildResponse(userResponseDto);
@@ -85,13 +87,13 @@ public class AuthenticationController {
 
     @ApiOperation(value = "주요 정보 수정", notes = "비밀번호를 입력해 하나의 중요한 정보를 수정할 수 있습니다.")
     @PatchMapping("{username}/auth")
-    public ResponseEntity<Void> updateInformationWithAuthentication(
+    public ResponseEntity<Void> updateUserInformationWithAuthentication(
             @ApiParam(value = "사용자 이름", example = "gildong1234") @PathVariable String username,
             @Valid @RequestBody @ApiParam(value = "회원 정보 수정 양식")
-            CrucialInformationUpdateForm crucialInformationUpdateForm
+            CrucialInformationUpdateDto crucialInformationUpdateDto
     ) {
 
-        authenticationService.updateCrucialUserInformation(username, crucialInformationUpdateForm);
+        authenticationService.updateCrucialUserInformation(username, crucialInformationUpdateDto);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 
@@ -113,7 +115,7 @@ public class AuthenticationController {
     @ApiOperation(value = "비밀번호 재설정", notes = "인증에 성공하면 새로운 비밀번호를 설정할 수 있습니다.")
     @PatchMapping("password-reset")
     public ResponseEntity<Void> resetPassword(
-            @ApiParam(value = "토큰", example = "abcd@abc.com") String token,
+            @ApiParam(value = "토큰") String token,
             @ApiParam(value = "비밀번호", example = "1234") String password
     ) {
 

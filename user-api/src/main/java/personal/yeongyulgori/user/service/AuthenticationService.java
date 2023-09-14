@@ -1,9 +1,9 @@
 package personal.yeongyulgori.user.service;
 
-import personal.yeongyulgori.user.domain.CrucialInformationUpdateForm;
 import personal.yeongyulgori.user.domain.InformationUpdateForm;
 import personal.yeongyulgori.user.domain.SignInForm;
 import personal.yeongyulgori.user.domain.SignUpForm;
+import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.dto.UserResponseDto;
 
 public interface AuthenticationService {
@@ -14,9 +14,9 @@ public interface AuthenticationService {
 
     UserResponseDto getUserDetails(String username);
 
-    UserResponseDto updateUserInformations(String username, InformationUpdateForm informationUpdateForm);
+    UserResponseDto updateUserInformation(String username, InformationUpdateForm informationUpdateForm);
 
-    void updateCrucialUserInformation(String username, CrucialInformationUpdateForm crucialInformationUpdateForm);
+    void updateCrucialUserInformation(String username, CrucialInformationUpdateDto crucialInformationUpdateDto);
 
     void requestPasswordReset(String email);
 

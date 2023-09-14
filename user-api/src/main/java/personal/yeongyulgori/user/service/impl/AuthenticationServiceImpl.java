@@ -6,19 +6,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import personal.yeongyulgori.user.domain.CrucialInformationUpdateForm;
 import personal.yeongyulgori.user.domain.InformationUpdateForm;
 import personal.yeongyulgori.user.domain.SignInForm;
 import personal.yeongyulgori.user.domain.SignUpForm;
 import personal.yeongyulgori.user.domain.model.User;
 import personal.yeongyulgori.user.domain.repository.UserRepository;
+import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.dto.UserResponseDto;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
-import personal.yeongyulgori.user.exception.serious.sub.FailedToConvertImageFileException;
 import personal.yeongyulgori.user.service.AuthenticationService;
 
 import javax.persistence.EntityNotFoundException;
-import java.io.IOException;
 
 import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
 
@@ -36,17 +34,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Beginning to sign up user for email: {}, username: {}",
                 signUpForm.getEmail(), signUpForm.getUsername());
 
-        if (userRepository.existsByEmail(signUpForm.getEmail())) {
-            throw new DuplicateUserException("이미 가입된 회원입니다. email: " + signUpForm.getEmail());
-        }
+        validateDuplicateUser(signUpForm.getEmail(), signUpForm.getUsername(), signUpForm.getPhoneNumber());
 
-            log.info("User signed up successfully for email: {}, username: {}",
-                    savedUser.getEmail(), savedUser.getUsername());
+        User savedUser = userRepository.save(User.from(signUpForm));
 
-            return UserResponseDto.of(
-                    savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(), savedUser.getRole()
-            );
+        log.info("User signed up successfully for email: {}, username: {}",
+                savedUser.getEmail(), savedUser.getUsername());
 
+        return UserResponseDto.of(
+                savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(), savedUser.getRole()
+        );
 
     }
 
@@ -72,6 +69,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    public UserResponseDto updateUserInformation(String username, InformationUpdateForm informationUpdateForm) {
 
         log.info("Beginning to update user information for username: {}", username);
 
@@ -79,28 +77,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .orElseThrow(() -> new EntityNotFoundException
                         ("해당 회원이 존재하지 않습니다. username: " + username));
 
-            User updatedUser = userRepository.save(user.withForm(username, informationUpdateForm));
+        User updatedUser = userRepository.save(user.withForm(username, informationUpdateForm));
 
-            log.info("User information updated successfully for username: {}", updatedUser.getUsername());
+        log.info("User information updated successfully for username: {}", updatedUser.getUsername());
 
-            return UserResponseDto.from(updatedUser);
-
-
-
+        return UserResponseDto.from(updatedUser);
 
     }
 
     @Override
     public void updateCrucialUserInformation(
-            String username, CrucialInformationUpdateForm crucialInformationUpdateForm
+            String username, CrucialInformationUpdateDto crucialInformationUpdateDto
     ) {
 
         log.info("Beginning to update crucial user information for username: {}", username);
 
-        User user = userRepository.findById(crucialInformationUpdateForm.getId())
+        User user = userRepository.findById(crucialInformationUpdateDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("해당 회원이 존재하지 않습니다. username: " + username));
 
-        userRepository.save(user.withCrucialForm(crucialInformationUpdateForm));
+        userRepository.save(user.withCrucialForm(crucialInformationUpdateDto));
 
         log.info("Crucial user information updated successfully for username: {}", username);
 
@@ -130,6 +125,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userRepository.delete(user);
 
         log.info("User deleted successfully for username: {}", username);
+
+    }
+
+    private void validateDuplicateUser(String email, String username, String phoneNumber) {
+
+        if (userRepository.existsByEmail(email)) {
+            throw new DuplicateUserException("이미 가입된 회원입니다. email: " + email);
+        }
+
+        if (userRepository.existsByUsername(username)) {
+            throw new DuplicateUserException("이미 가입된 회원입니다. username: " + username);
+        }
+
+        if (userRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new DuplicateUserException("이미 가입된 회원입니다. phoneNumber: " + phoneNumber);
+        }
 
     }
 
