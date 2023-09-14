@@ -4,10 +4,10 @@ import java.util.List;
 
 public interface AutoCompleteService {
 
-    void addAutocompleteKeyWord(String username);
+    void addAutoCompleteKeyWord(String username);
 
-    List<String> autocomplete(String keyword);
+    List<String> autoComplete(String keyword);
 
-    void deleteAutocompleteKeyword(String keyword);
+    void deleteAutoCompleteKeyword(String keyword);
 
 }

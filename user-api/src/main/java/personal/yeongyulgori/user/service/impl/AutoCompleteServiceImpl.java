@@ -6,6 +6,7 @@ import org.apache.commons.collections4.Trie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 import personal.yeongyulgori.user.service.AutoCompleteService;
 
 import java.util.List;
@@ -20,30 +21,41 @@ public class AutoCompleteServiceImpl implements AutoCompleteService {
     private static final Logger log = LoggerFactory.getLogger(AutoCompleteService.class);
 
     @Override
-    public void addAutocompleteKeyWord(String name) {
+    public void addAutoCompleteKeyWord(String name) {
 
-        log.info("Add autocomplete keyword by username: " + name);
+        log.info("Add autoComplete keyword by username: " + name);
 
         trie.put(name, null);
 
     }
 
     @Override
-    public List<String> autocomplete(String keyword) {
+    public List<String> autoComplete(String keyword) {
 
-        log.info("Retrieve autocomplete keyword: " + keyword);
+        log.info("Beginning to retrieve autoComplete results by keyword: " + keyword);
 
-        return (List<String>) trie.prefixMap(keyword).keySet()
+        StopWatch stopWatch = new StopWatch();
+
+        stopWatch.start();
+
+        List<String> autoCompleteResults = (List<String>) trie.prefixMap(keyword).keySet()
                 .stream()
                 .limit(10)
                 .collect(Collectors.toList());
 
+        stopWatch.stop();
+
+        log.info("AutoComplete results retrieved successfully: {}\n Retrieving task execution time: {} ms",
+                keyword, stopWatch.getTotalTimeMillis());
+
+        return autoCompleteResults;
+
     }
 
     @Override
-    public void deleteAutocompleteKeyword(String keyword) {
+    public void deleteAutoCompleteKeyword(String keyword) {
 
-        log.info("Delete autocomplete keyword: " + keyword);
+        log.info("Delete autoComplete keyword: " + keyword);
 
         trie.remove(keyword);
 
