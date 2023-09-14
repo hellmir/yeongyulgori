@@ -4,6 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,6 +16,7 @@ import personal.yeongyulgori.user.exception.significant.AbstractSignificantExcep
 
 import javax.persistence.EntityNotFoundException;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -93,6 +97,36 @@ public class GlobalExceptionHandler {
 
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    private ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException
+            (HttpMessageNotReadableException e) {
+
+        log.info("Exception occurred: {}", e.getMessage(), e);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.resolve(errorResponse.getStatusCode()));
+
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    private ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException
+            (HttpMediaTypeNotSupportedException e) {
+
+        log.info("Exception occurred: {}", e.getMessage(), e);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value())
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.resolve(errorResponse.getStatusCode()));
+
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     private ResponseEntity<ErrorResponse> handleEntityNotFoundException
             (EntityNotFoundException e) {
@@ -108,6 +142,35 @@ public class GlobalExceptionHandler {
 
     }
 
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    private ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException
+            (HttpRequestMethodNotSupportedException e) {
+
+        log.warn("Warning exception occurred: {}", e.getMessage(), e);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED.value())
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.resolve(errorResponse.getStatusCode()));
+
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    private ResponseEntity<ErrorResponse> handleAccessDeniedException
+            (AccessDeniedException e) {
+
+        log.warn("Warning exception occurred: {}", e.getMessage(), e);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.resolve(errorResponse.getStatusCode()));
+
+    }
 
     @ExceptionHandler(IOException.class)
     private ResponseEntity<ErrorResponse> handleIOException
