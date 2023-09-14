@@ -43,9 +43,14 @@ public class TestObjectFactory {
                 .name(name)
                 .birthDate(birthDate)
                 .phoneNumber(phoneNumber)
-                .address(new Address(
-                        "서울", "테헤란로 2길 5", "123-456-7890", "101동 102호"
-                ))
+                .address(
+                        Address.builder()
+                                .city("서울")
+                                .street("테헤란로 2길 5")
+                                .zipcode("12345")
+                                .detailedAddress("101동 102호")
+                                .build()
+                )
                 .role(role)
                 .profileImage(TEST_IMAGE)
                 .build();
@@ -79,9 +84,14 @@ public class TestObjectFactory {
                 .name(name)
                 .birthDate(birthDate)
                 .phoneNumber(phoneNumber)
-                .address(new Address(
-                        "서울", "테헤란로 2길 5", "123-456-7890", "101동 102호"
-                ))
+                .address(
+                        Address.builder()
+                                .city("서울")
+                                .street("테헤란로 2길 5")
+                                .zipcode("12345")
+                                .detailedAddress("101동 102호")
+                                .build()
+                )
                 .profileImage(TEST_IMAGE.getBytes())
                 .role(role)
                 .build();
