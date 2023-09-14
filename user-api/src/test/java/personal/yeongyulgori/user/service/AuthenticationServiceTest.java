@@ -8,11 +8,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.web.multipart.MultipartFile;
 import personal.yeongyulgori.user.constant.Role;
-import personal.yeongyulgori.user.domain.*;
+import personal.yeongyulgori.user.domain.Address;
+import personal.yeongyulgori.user.domain.InformationUpdateForm;
+import personal.yeongyulgori.user.domain.SignInForm;
+import personal.yeongyulgori.user.domain.SignUpForm;
 import personal.yeongyulgori.user.domain.model.User;
 import personal.yeongyulgori.user.domain.repository.UserRepository;
+import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.dto.UserResponseDto;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
 
@@ -22,11 +25,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 import static personal.yeongyulgori.user.constant.Role.BUSINESS_USER;
 import static personal.yeongyulgori.user.constant.Role.GENERAL_USER;
-import static personal.yeongyulgori.user.testutil.TestObjectFactory.createUser;
-import static personal.yeongyulgori.user.testutil.TestObjectFactory.enterUserForm;
+import static personal.yeongyulgori.user.testutil.TestObjectFactory.*;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -43,7 +44,7 @@ class AuthenticationServiceTest {
         userRepository.deleteAllInBatch();
     }
 
-    @DisplayName("사용자가 올바른 양식을 입력하면 회원 가입을 할 수 있다.")
+    @DisplayName("올바른 SignUp 양식을 전송하면 회원 가입을 할 수 있다.")
     @ParameterizedTest
     @CsvSource({
             "abcd@abc.com, person1, 1234, 홍길동, 2000-01-01, 01012345678, GENERAL_USER",
@@ -67,7 +68,7 @@ class AuthenticationServiceTest {
 
     }
 
-    @DisplayName("회원 가입 시 중복된 이메일을 입력하면 UserAlreadyExistsException이 발생한다.")
+    @DisplayName("중복된 이메일을 전송하면 UserAlreadyExistsException이 발생한다.")
     @Test
     void signUpUserByDuplicateEmail() {
 
@@ -77,12 +78,13 @@ class AuthenticationServiceTest {
                 "abcd@abc.com", "person1", "1234", "홍길동",
                 LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
         );
+
+        authenticationService.signUpUser(signUpForm1);
+
         SignUpForm signUpForm2 = enterUserForm(
                 "abcd@abc.com", "person2", "12345", "고길동",
                 LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER
         );
-
-        UserResponseDto userResponseDto1 = authenticationService.signUpUser(signUpForm1);
 
         // when, then
         assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
@@ -91,8 +93,58 @@ class AuthenticationServiceTest {
 
     }
 
+    @DisplayName("중복된 사용자 이름을 전송하면 UserAlreadyExistsException이 발생한다.")
+    @Test
+    void signUpUserByDuplicateUsername() {
+
+        // given
+
+        SignUpForm signUpForm1 = enterUserForm(
+                "abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
+        );
+
+        authenticationService.signUpUser(signUpForm1);
+
+        SignUpForm signUpForm2 = enterUserForm(
+                "abcd@abcd.com", "person1", "12345", "고길동",
+                LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER
+        );
+
+        // when, then
+        assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
+                .isInstanceOf(DuplicateUserException.class)
+                .hasMessage("이미 가입된 회원입니다. username: " + signUpForm2.getUsername());
+
+    }
+
+    @DisplayName("중복된 휴대폰 번호를 전송하면 UserAlreadyExistsException이 발생한다.")
+    @Test
+    void signUpUserByDuplicatePhoneNumber() {
+
+        // given
+
+        SignUpForm signUpForm1 = enterUserForm(
+                "abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
+        );
+
+        authenticationService.signUpUser(signUpForm1);
+
+        SignUpForm signUpForm2 = enterUserForm(
+                "abcd@abcd.com", "person2", "12345", "고길동",
+                LocalDate.of(2000, 2, 2), "01012345678", BUSINESS_USER
+        );
+
+        // when, then
+        assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
+                .isInstanceOf(DuplicateUserException.class)
+                .hasMessage("이미 가입된 회원입니다. phoneNumber: " + signUpForm2.getPhoneNumber());
+
+    }
+
     // TODO
-    @DisplayName("사용자가 올바른 양식을 입력하면 로그인을 할 수 있다.")
+    @DisplayName("올바른 SignIn 양식을 전송하면 로그인을 할 수 있다.")
     @Test
     void signInUser() {
 
@@ -154,9 +206,9 @@ class AuthenticationServiceTest {
 
     }
 
-    @DisplayName("사용자 이름과 informationUpdateForm을 통해 다수의 회원 개인 정보를 수정할 수 있다.")
+    @DisplayName("사용자 이름과 informationUpdateForm 양식을 통해 다수의 회원 개인 정보를 수정할 수 있다.")
     @Test
-    void updateUserInformations() {
+    void updateUserInformation() {
 
         // given
         User user1 = createUser(
@@ -194,14 +246,17 @@ class AuthenticationServiceTest {
                         .street("테헤란로 231")
                         .zipcode("12345")
                         .build())
-                .profileImage(mock(MultipartFile.class))
+                .profileImage(TEST_IMAGE)
                 .role(BUSINESS_USER)
                 .build();
 
         // when
-        UserResponseDto userResponseDto1 = authenticationService.updateUserInformations("person0", informationUpdateForm1);
-        UserResponseDto userResponseDto2 = authenticationService.updateUserInformations(user2.getUsername(), informationUpdateForm2);
-        UserResponseDto userResponseDto3 = authenticationService.updateUserInformations("person4", informationUpdateForm3);
+        UserResponseDto userResponseDto1 = authenticationService
+                .updateUserInformation("person0", informationUpdateForm1);
+        UserResponseDto userResponseDto2 = authenticationService
+                .updateUserInformation(user2.getUsername(), informationUpdateForm2);
+        UserResponseDto userResponseDto3 = authenticationService
+                .updateUserInformation("person4", informationUpdateForm3);
 
         // then
         assertThat(userResponseDto1.getUsername()).isEqualTo("person0");
@@ -224,7 +279,7 @@ class AuthenticationServiceTest {
 
     @DisplayName("잘못된 id로 회원 개인 정보를 수정하려 하면 EntityNotFoundException이 발생한다.")
     @Test
-    void updateUserInformationsByWrongUserId() {
+    void updateUserInformationByWrongUserId() {
 
         // given
         User user = createUser(
@@ -240,14 +295,14 @@ class AuthenticationServiceTest {
 
         // when, then
         assertThatThrownBy(
-                () -> authenticationService.updateUserInformations(user.getUsername(), informationUpdateForm)
+                () -> authenticationService.updateUserInformation(user.getUsername(), informationUpdateForm)
         )
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: " + user.getUsername());
 
     }
 
-    @DisplayName("crucialInformationUpdateForm을 통해 하나의 중요한 회원 개인 정보를 수정할 수 있다.")
+    @DisplayName("crucialInformationUpdateDto를 통해 하나의 중요한 회원 개인 정보를 수정할 수 있다.")
     @Test
     void updateCrucialUserInformation() {
 
@@ -267,26 +322,26 @@ class AuthenticationServiceTest {
 
         userRepository.saveAll(List.of(user1, user2, user3));
 
-        CrucialInformationUpdateForm crucialInformationUpdateForm1 = CrucialInformationUpdateForm.builder()
+        CrucialInformationUpdateDto crucialInformationUpdateDto1 = CrucialInformationUpdateDto.builder()
                 .id(user1.getId())
                 .email("abcd@abcdef.com")
                 .build();
 
-        CrucialInformationUpdateForm crucialInformationUpdateForm2 = CrucialInformationUpdateForm.builder()
+        CrucialInformationUpdateDto crucialInformationUpdateDto2 = CrucialInformationUpdateDto.builder()
                 .id(user2.getId())
                 .password("123456")
                 .build();
 
-        CrucialInformationUpdateForm crucialInformationUpdateForm3 = CrucialInformationUpdateForm.builder()
+        CrucialInformationUpdateDto crucialInformationUpdateDto3 = CrucialInformationUpdateDto.builder()
                 .id(user3.getId())
                 .phoneNumber("01012345671")
                 .build();
 
         // when
 
-        authenticationService.updateCrucialUserInformation(user1.getUsername(), crucialInformationUpdateForm1);
-        authenticationService.updateCrucialUserInformation(user2.getUsername(), crucialInformationUpdateForm2);
-        authenticationService.updateCrucialUserInformation(user3.getUsername(), crucialInformationUpdateForm3);
+        authenticationService.updateCrucialUserInformation(user1.getUsername(), crucialInformationUpdateDto1);
+        authenticationService.updateCrucialUserInformation(user2.getUsername(), crucialInformationUpdateDto2);
+        authenticationService.updateCrucialUserInformation(user3.getUsername(), crucialInformationUpdateDto3);
 
         User savedUser1 = userRepository.findById(user1.getId()).get();
         User savedUser2 = userRepository.findById(user2.getId()).get();
@@ -319,14 +374,14 @@ class AuthenticationServiceTest {
 
         userRepository.save(user);
 
-        CrucialInformationUpdateForm crucialInformationUpdateForm = CrucialInformationUpdateForm.builder()
+        CrucialInformationUpdateDto crucialInformationUpdateDto = CrucialInformationUpdateDto.builder()
                 .id(user.getId() + 1)
                 .build();
 
         // when, then
         assertThatThrownBy(
                 () -> authenticationService.updateCrucialUserInformation(
-                        user.getUsername(), crucialInformationUpdateForm
+                        user.getUsername(), crucialInformationUpdateDto
                 )
         )
                 .isInstanceOf(EntityNotFoundException.class)
