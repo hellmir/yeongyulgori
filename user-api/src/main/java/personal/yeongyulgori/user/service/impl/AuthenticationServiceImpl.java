@@ -96,7 +96,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = userRepository.findById(crucialInformationUpdateDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("해당 회원이 존재하지 않습니다. username: " + username));
 
-        userRepository.save(user.withCrucialForm(crucialInformationUpdateDto));
+        userRepository.save(user.withCrucialData(crucialInformationUpdateDto));
 
         log.info("Crucial user information updated successfully for username: {}", username);
 
