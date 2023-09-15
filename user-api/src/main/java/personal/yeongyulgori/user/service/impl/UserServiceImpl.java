@@ -40,7 +40,10 @@ public class UserServiceImpl implements UserService {
 
         log.info("User profile retrieved successfully for username: {}", username);
 
-        return UserResponseDto.of(user.getEmail(), user.getUsername(), user.getName(), user.getRole());
+        return UserResponseDto.of(
+                user.getEmail(), user.getUsername(), user.getName(),
+                user.getRole(), user.getCreatedAt(), user.getModifiedAt()
+        );
 
     }
 
@@ -57,7 +60,8 @@ public class UserServiceImpl implements UserService {
 
         List<UserResponseDto> userResponseDtos = users.getContent().stream()
                 .map(user -> UserResponseDto.of(
-                        user.getEmail(), user.getUsername(), user.getName(), user.getRole()
+                        user.getEmail(), user.getUsername(), user.getName(),
+                        user.getRole(), user.getCreatedAt(), user.getModifiedAt()
                 ))
                 .collect(Collectors.toList());
 

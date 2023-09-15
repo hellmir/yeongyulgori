@@ -22,6 +22,7 @@ import personal.yeongyulgori.user.service.AuthenticationService;
 import personal.yeongyulgori.user.service.AutoCompleteService;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -69,7 +70,8 @@ class AuthenticationControllerTest {
         );
 
         UserResponseDto userResponseDto = UserResponseDto.of(
-                "abcd@abc.com", "gildong1234", "홍길동", GENERAL_USER
+                "abcd@abc.com", "gildong1234", "홍길동",
+                GENERAL_USER, LocalDateTime.now(), LocalDateTime.now()
         );
 
 

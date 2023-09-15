@@ -8,6 +8,7 @@ import personal.yeongyulgori.user.domain.Address;
 import personal.yeongyulgori.user.domain.model.User;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Base64;
 
 @Getter
@@ -25,13 +26,21 @@ public class UserResponseDto {
     private Role role;
     private String profileImage;
 
-    public static UserResponseDto of(String email, String username, String name, Role role) {
+    private LocalDateTime createdAt;
+    private LocalDateTime modifiedAt;
+
+    public static UserResponseDto of(
+            String email, String username, String name,
+            Role role, LocalDateTime createdAt, LocalDateTime modifiedAt
+    ) {
 
         return UserResponseDto.builder()
                 .email(email)
                 .username(username)
                 .name(name)
                 .role(role)
+                .createdAt(createdAt)
+                .modifiedAt(modifiedAt)
                 .build();
 
     }
@@ -51,6 +60,8 @@ public class UserResponseDto {
                         user.getProfileImage() != null ?
                                 Base64.getEncoder().encodeToString(user.getProfileImage()) : null
                 )
+                .createdAt(user.getCreatedAt())
+                .modifiedAt(user.getModifiedAt())
                 .build();
 
     }
