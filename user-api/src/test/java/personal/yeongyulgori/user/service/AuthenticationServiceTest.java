@@ -18,6 +18,7 @@ import personal.yeongyulgori.user.domain.repository.UserRepository;
 import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.dto.UserResponseDto;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
+import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
@@ -93,31 +94,6 @@ class AuthenticationServiceTest {
 
     }
 
-    @DisplayName("중복된 사용자 이름을 전송하면 UserAlreadyExistsException이 발생한다.")
-    @Test
-    void signUpUserByDuplicateUsername() {
-
-        // given
-
-        SignUpForm signUpForm1 = enterUserForm(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
-
-        authenticationService.signUpUser(signUpForm1);
-
-        SignUpForm signUpForm2 = enterUserForm(
-                "abcd@abcd.com", "person1", "12345", "고길동",
-                LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER
-        );
-
-        // when, then
-        assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
-                .isInstanceOf(DuplicateUserException.class)
-                .hasMessage("중복된 사용자 이름입니다. username: " + signUpForm2.getUsername());
-
-    }
-
     @DisplayName("중복된 휴대폰 번호를 전송하면 UserAlreadyExistsException이 발생한다.")
     @Test
     void signUpUserByDuplicatePhoneNumber() {
@@ -140,6 +116,31 @@ class AuthenticationServiceTest {
         assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
                 .isInstanceOf(DuplicateUserException.class)
                 .hasMessage("이미 가입된 회원입니다. phoneNumber: " + signUpForm2.getPhoneNumber());
+
+    }
+
+    @DisplayName("중복된 사용자 이름을 전송하면 UserAlreadyExistsException이 발생한다.")
+    @Test
+    void signUpUserByDuplicateUsername() {
+
+        // given
+
+        SignUpForm signUpForm1 = enterUserForm(
+                "abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
+        );
+
+        authenticationService.signUpUser(signUpForm1);
+
+        SignUpForm signUpForm2 = enterUserForm(
+                "abcd@abcd.com", "person1", "12345", "고길동",
+                LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER
+        );
+
+        // when, then
+        assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
+                .isInstanceOf(DuplicateUsernameException.class)
+                .hasMessage("중복된 사용자 이름입니다. username: " + signUpForm2.getUsername());
 
     }
 
