@@ -14,6 +14,7 @@ import personal.yeongyulgori.user.domain.repository.UserRepository;
 import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.dto.UserResponseDto;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
+import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
 import personal.yeongyulgori.user.service.AuthenticationService;
 
 import javax.persistence.EntityNotFoundException;
@@ -135,12 +136,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new DuplicateUserException("이미 가입된 회원입니다. email: " + email);
         }
 
-        if (userRepository.existsByUsername(username)) {
-            throw new DuplicateUserException("중복된 사용자 이름입니다. username: " + username);
-        }
-
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
             throw new DuplicateUserException("이미 가입된 회원입니다. phoneNumber: " + phoneNumber);
+        }
+
+        if (userRepository.existsByUsername(username)) {
+            throw new DuplicateUsernameException("중복된 사용자 이름입니다. username: " + username);
         }
 
     }
