@@ -116,7 +116,37 @@ public class User extends BaseEntity {
                 .name(Optional.ofNullable(informationUpdateForm.getName()).orElse(name))
                 .birthDate(birthDate)
                 .phoneNumber(phoneNumber)
-                .address(Optional.ofNullable(informationUpdateForm.getAddress()).orElse(address))
+                .address(
+                        Optional.ofNullable(informationUpdateForm.getAddress()).isPresent() ?
+                                Address.builder()
+                                        .city(Optional.ofNullable(
+                                                                informationUpdateForm.getAddress().getCity()
+                                                        )
+                                                        .orElse(address.getCity())
+                                        )
+                                        .street(Optional.ofNullable(
+                                                                informationUpdateForm.getAddress().getStreet()
+                                                        )
+                                                        .orElse(address.getStreet())
+
+                                        )
+                                        .zipcode(
+                                                Optional.ofNullable(
+                                                                informationUpdateForm
+                                                                        .getAddress().getZipcode()
+                                                        )
+                                                        .orElse(address.getZipcode())
+                                        )
+                                        .detailedAddress(
+                                                Optional.ofNullable(
+                                                                informationUpdateForm
+                                                                        .getAddress().getDetailedAddress()
+                                                        )
+                                                        .orElse(address.getDetailedAddress())
+                                        )
+                                        .build()
+                                : address
+                )
                 .role(Optional.ofNullable(informationUpdateForm.getRole()).orElse(role))
                 .profileImage(Optional.ofNullable(decodedImage).orElse(profileImage))
                 .createdAt(getCreatedAt())
