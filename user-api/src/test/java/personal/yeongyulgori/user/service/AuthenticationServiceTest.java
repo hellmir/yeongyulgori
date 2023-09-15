@@ -211,15 +211,15 @@ class AuthenticationServiceTest {
     void updateUserInformation() {
 
         // given
-        User user1 = createUser(
+        User user1 = createUserWithAddress(
                 "abcd@abc.com", "person1", "1234", "홍길동",
                 LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
         );
-        User user2 = createUser(
+        User user2 = createUserWithAddress(
                 "abcd@abcd.com", "person2", "12345", "고길동",
                 LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER
         );
-        User user3 = createUser(
+        User user3 = createUserWithAddress(
                 "abcd@abcde.com", "person3", "123456", "길동",
                 LocalDate.of(2000, 3, 3), "01012345670", Role.GENERAL_USER
         );
