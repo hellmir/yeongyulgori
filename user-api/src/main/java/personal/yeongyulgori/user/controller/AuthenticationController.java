@@ -85,7 +85,7 @@ public class AuthenticationController {
 
     }
 
-    @ApiOperation(value = "주요 정보 수정", notes = "비밀번호를 입력해 하나의 중요한 정보를 수정할 수 있습니다.")
+    @ApiOperation(value = "주요 회원 정보 수정", notes = "비밀번호를 입력해 하나의 중요한 회원 정보를 수정할 수 있습니다.")
     @PatchMapping("{username}/auth")
     public ResponseEntity<Void> updateUserInformationWithAuthentication(
             @ApiParam(value = "사용자 이름", example = "gildong1234") @PathVariable String username,
