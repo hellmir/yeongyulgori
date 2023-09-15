@@ -3,9 +3,9 @@ package personal.yeongyulgori.user.exception.serious.sub;
 import org.springframework.http.HttpStatus;
 import personal.yeongyulgori.user.exception.serious.AbstractSeriousException;
 
-public class FailedToConvertImageFileException extends AbstractSeriousException {
+public class KeywordNotFoundException extends AbstractSeriousException {
 
-    public FailedToConvertImageFileException(String message) {
+    public KeywordNotFoundException(String message) {
         super(message);
     }
 

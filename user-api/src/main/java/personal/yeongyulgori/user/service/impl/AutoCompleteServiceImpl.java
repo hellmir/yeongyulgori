@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
+import personal.yeongyulgori.user.exception.serious.sub.KeywordNotFoundException;
 import personal.yeongyulgori.user.service.AutoCompleteService;
 
 import java.util.List;
@@ -56,6 +57,10 @@ public class AutoCompleteServiceImpl implements AutoCompleteService {
     public void deleteAutoCompleteKeyword(String keyword) {
 
         log.info("Delete autoComplete keyword: " + keyword);
+
+        if (!trie.containsKey(keyword)) {
+            throw new KeywordNotFoundException("해당 자동완성 키워드가 존재하지 않습니다. keyword: " + keyword);
+        }
 
         trie.remove(keyword);
 
