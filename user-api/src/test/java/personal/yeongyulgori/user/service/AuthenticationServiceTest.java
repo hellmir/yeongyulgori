@@ -19,8 +19,9 @@ import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.dto.UserResponseDto;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
+import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException;
+import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
 
-import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -202,7 +203,7 @@ class AuthenticationServiceTest {
 
         // when, then
         assertThatThrownBy(() -> authenticationService.getUserDetails("person2"))
-                .isInstanceOf(EntityNotFoundException.class)
+                .isInstanceOf(NonExistentUserException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: person2");
 
     }
@@ -298,7 +299,7 @@ class AuthenticationServiceTest {
         assertThatThrownBy(
                 () -> authenticationService.updateUserInformation(user.getUsername(), informationUpdateForm)
         )
-                .isInstanceOf(EntityNotFoundException.class)
+                .isInstanceOf(NonExistentUserException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: " + user.getUsername());
 
     }
@@ -385,7 +386,7 @@ class AuthenticationServiceTest {
                         user.getUsername(), crucialInformationUpdateDto
                 )
         )
-                .isInstanceOf(EntityNotFoundException.class)
+                .isInstanceOf(NonExistentUserException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: " + user.getUsername());
 
     }
@@ -416,8 +417,7 @@ class AuthenticationServiceTest {
 
     }
 
-    // TODO
-    @DisplayName("존재하지 않는 사용자 이름으로 회원을 탈퇴하려 하면 EntityNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 사용자 이름으로 회원을 탈퇴하려 하면 NonExistentUserException이 발생한다.")
     @Test
     void deleteUserByWrongUsername() {
 
@@ -433,8 +433,29 @@ class AuthenticationServiceTest {
         assertThatThrownBy(
                 () -> authenticationService.deleteUser("person2", "1234")
         )
-                .isInstanceOf(EntityNotFoundException.class)
+                .isInstanceOf(NonExistentUserException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: person2");
+
+    }
+
+    @DisplayName("일치하지 않는 비밀번호로 회원을 탈퇴하려 하면 IncorrectPasswordException이 발생한다.")
+    @Test
+    void deleteUserByWrongPassword() {
+
+        // given
+        User user = createUser(
+                "abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
+        );
+
+        userRepository.save(user);
+
+        // when, then
+        assertThatThrownBy(
+                () -> authenticationService.deleteUser("person1", "12345")
+        )
+                .isInstanceOf(IncorrectPasswordException.class)
+                .hasMessage("비밀번호가 일치하지 않습니다.");
 
     }
 

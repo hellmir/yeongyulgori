@@ -15,9 +15,9 @@ import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.dto.UserResponseDto;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
+import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException;
+import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
 import personal.yeongyulgori.user.service.AuthenticationService;
-
-import javax.persistence.EntityNotFoundException;
 
 import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
 
@@ -62,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Beginning to retrieve user profile for username: {}", username);
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("해당 회원이 존재하지 않습니다. username: " + username));
+                .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
 
         log.info("User profile retrieved successfully for username: {}", username);
 
@@ -76,7 +76,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Beginning to update user information for username: {}", username);
 
         User user = userRepository.findById(informationUpdateForm.getId())
-                .orElseThrow(() -> new EntityNotFoundException
+                .orElseThrow(() -> new NonExistentUserException
                         ("해당 회원이 존재하지 않습니다. username: " + username));
 
         User updatedUser = userRepository.save(user.withForm(username, informationUpdateForm));
@@ -95,7 +95,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Beginning to update crucial user information for username: {}", username);
 
         User user = userRepository.findById(crucialInformationUpdateDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("해당 회원이 존재하지 않습니다. username: " + username));
+                .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
 
         userRepository.save(user.withCrucialData(crucialInformationUpdateDto));
 
@@ -122,7 +122,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Beginning to delete user with username: {}", username);
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("해당 회원이 존재하지 않습니다. username: " + username));
+                .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
+
+        if (!user.getPassword().equals(password)) {
+            throw new IncorrectPasswordException();
+        }
 
         userRepository.delete(user);
 
