@@ -65,7 +65,7 @@ public class User extends BaseEntity {
     @Builder
     private User(Long id, String email, String username, String password, String name,
                  LocalDate birthDate, String phoneNumber, Address address, byte[] profileImage,
-                 Role role, LocalDateTime createdAt, LocalDateTime modifiedAt) {
+                 Role role, LocalDateTime createdAt) {
 
         this.id = id;
         this.email = email.toLowerCase(Locale.ROOT);
@@ -79,8 +79,6 @@ public class User extends BaseEntity {
         this.profileImage = profileImage;
 
         setCreatedAt(createdAt);
-
-        setModifiedAt(modifiedAt);
 
     }
 
@@ -121,6 +119,7 @@ public class User extends BaseEntity {
                 .address(Optional.ofNullable(informationUpdateForm.getAddress()).orElse(address))
                 .role(Optional.ofNullable(informationUpdateForm.getRole()).orElse(role))
                 .profileImage(Optional.ofNullable(decodedImage).orElse(profileImage))
+                .createdAt(getCreatedAt())
                 .build();
 
     }
@@ -138,6 +137,7 @@ public class User extends BaseEntity {
                 .address(address)
                 .role(role)
                 .profileImage(profileImage)
+                .createdAt(getCreatedAt())
                 .build();
 
     }

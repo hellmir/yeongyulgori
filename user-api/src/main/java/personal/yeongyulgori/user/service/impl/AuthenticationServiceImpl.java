@@ -42,7 +42,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 savedUser.getEmail(), savedUser.getUsername());
 
         return UserResponseDto.of(
-                savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(), savedUser.getRole()
+                savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(),
+                savedUser.getRole(), savedUser.getCreatedAt(), savedUser.getModifiedAt()
         );
 
     }
