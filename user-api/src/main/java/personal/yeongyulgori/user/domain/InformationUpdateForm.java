@@ -17,13 +17,12 @@ public class InformationUpdateForm {
     @ApiModelProperty(value = "성명", example = "홍길동")
     private String name;
 
-    @ApiModelProperty(value = "주소", example = "2000-01-01")
     private Address address;
 
     @ApiModelProperty(value = "분류", example = "GENERAL_USER")
     private Role role;
 
-    @ApiModelProperty(value = "프로필 이미지 파일")
+    @ApiModelProperty(value = "Base64로 인코딩된 프로필 이미지 데이터 URI", example = "YourEncodedDataURI")
     private String profileImage;
 
 }

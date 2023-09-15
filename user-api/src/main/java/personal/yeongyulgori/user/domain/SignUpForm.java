@@ -50,7 +50,7 @@ public class SignUpForm {
     @NotNull(groups = OnSignUp.class, message = "회원 분류를 선택해 주세요.")
     private Role role;
 
-    @ApiModelProperty(value = "프로필 이미지 파일")
+    @ApiModelProperty(value = "Base64로 인코딩된 프로필 이미지 데이터 URI", example = "YourEncodedDataURI")
     private String profileImage;
 
 }
