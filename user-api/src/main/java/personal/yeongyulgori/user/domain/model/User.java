@@ -7,12 +7,16 @@ import lombok.NoArgsConstructor;
 import personal.yeongyulgori.user.base.BaseEntity;
 import personal.yeongyulgori.user.constant.Role;
 import personal.yeongyulgori.user.domain.Address;
+import personal.yeongyulgori.user.domain.InformationUpdateForm;
 import personal.yeongyulgori.user.domain.SignUpForm;
+import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
 
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.Locale;
+import java.util.Optional;
 
 import static javax.persistence.EnumType.STRING;
 
@@ -59,11 +63,12 @@ public class User extends BaseEntity {
     private boolean verify;
 
     @Builder
-    private User(String email, String username, String password, String name,
+    private User(Long id, String email, String username, String password, String name,
                  LocalDate birthDate, String phoneNumber, Address address, byte[] profileImage,
-                 Role role, LocalDateTime createdAt, LocalDateTime modifiedAt) {
+                 Role role, LocalDateTime createdAt) {
 
-        this.email = email;
+        this.id = id;
+        this.email = email.toLowerCase(Locale.ROOT);
         this.username = username;
         this.password = password;
         this.name = name;
@@ -75,14 +80,16 @@ public class User extends BaseEntity {
 
         setCreatedAt(createdAt);
 
-        setModifiedAt(modifiedAt);
-
     }
 
     public static User from(SignUpForm signUpForm) {
 
+        byte[] decodedImage = Optional.ofNullable(signUpForm.getProfileImage())
+                .map(Base64.getDecoder()::decode)
+                .orElse(null);
+
         return User.builder()
-                .email(signUpForm.getEmail().toLowerCase(Locale.ROOT))
+                .email(signUpForm.getEmail())
                 .username(signUpForm.getUsername())
                 .password(signUpForm.getPassword())
                 .name(signUpForm.getName())
@@ -90,7 +97,77 @@ public class User extends BaseEntity {
                 .phoneNumber(signUpForm.getPhoneNumber())
                 .address(signUpForm.getAddress())
                 .role(signUpForm.getRole())
-                .profileImage(signUpForm.getProfileImage())
+                .profileImage(decodedImage)
+                .build();
+
+    }
+
+    public User withForm(String username, InformationUpdateForm informationUpdateForm) {
+
+        byte[] decodedImage = Optional.ofNullable(informationUpdateForm.getProfileImage())
+                .map(Base64.getDecoder()::decode)
+                .orElse(null);
+
+        return User.builder()
+                .id(id)
+                .email(email)
+                .username(Optional.ofNullable(username).orElse(this.username))
+                .password(password)
+                .name(Optional.ofNullable(informationUpdateForm.getName()).orElse(name))
+                .birthDate(birthDate)
+                .phoneNumber(phoneNumber)
+                .address(
+                        Optional.ofNullable(informationUpdateForm.getAddress()).isPresent() ?
+                                Address.builder()
+                                        .city(Optional.ofNullable(
+                                                                informationUpdateForm.getAddress().getCity()
+                                                        )
+                                                        .orElse(address.getCity())
+                                        )
+                                        .street(Optional.ofNullable(
+                                                                informationUpdateForm.getAddress().getStreet()
+                                                        )
+                                                        .orElse(address.getStreet())
+
+                                        )
+                                        .zipcode(
+                                                Optional.ofNullable(
+                                                                informationUpdateForm
+                                                                        .getAddress().getZipcode()
+                                                        )
+                                                        .orElse(address.getZipcode())
+                                        )
+                                        .detailedAddress(
+                                                Optional.ofNullable(
+                                                                informationUpdateForm
+                                                                        .getAddress().getDetailedAddress()
+                                                        )
+                                                        .orElse(address.getDetailedAddress())
+                                        )
+                                        .build()
+                                : address
+                )
+                .role(Optional.ofNullable(informationUpdateForm.getRole()).orElse(role))
+                .profileImage(Optional.ofNullable(decodedImage).orElse(profileImage))
+                .createdAt(getCreatedAt())
+                .build();
+
+    }
+
+    public User withCrucialData(CrucialInformationUpdateDto crucialInformationUpdateDto) {
+
+        return User.builder()
+                .id(id)
+                .email(Optional.ofNullable(crucialInformationUpdateDto.getEmail()).orElse(email))
+                .username(username)
+                .password(Optional.ofNullable(crucialInformationUpdateDto.getPassword()).orElse(password))
+                .name(name)
+                .birthDate(birthDate)
+                .phoneNumber(Optional.ofNullable(crucialInformationUpdateDto.getPhoneNumber()).orElse(phoneNumber))
+                .address(address)
+                .role(role)
+                .profileImage(profileImage)
+                .createdAt(getCreatedAt())
                 .build();
 
     }
