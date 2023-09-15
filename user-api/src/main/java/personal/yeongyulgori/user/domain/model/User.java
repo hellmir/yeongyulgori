@@ -154,7 +154,7 @@ public class User extends BaseEntity {
 
     }
 
-    public User withCrucialForm(CrucialInformationUpdateDto crucialInformationUpdateDto) {
+    public User withCrucialData(CrucialInformationUpdateDto crucialInformationUpdateDto) {
 
         return User.builder()
                 .id(id)
