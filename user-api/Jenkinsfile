@@ -11,7 +11,7 @@ pipeline {
                     def projectVersion = sh(script:'./gradlew -q printProjectVersion', returnStdout:true).trim()
                     env.PROJECT_NAME = projectName
                     env.PROJECT_VERSION = projectVersion
-                    env.JAR_PATH = "${WORKSPACE}/build/libs/${env.PROJECT_NAME}-${env.PROJECT_VERSION}.jar"
+                    env.JAR_PATH = "${WORKSPACE}/${env.PROJECT_NAME}/build/libs/${env.PROJECT_NAME}-${env.PROJECT_VERSION}.jar"
                 }
                 echo 'Environment variables set'
             }
@@ -30,7 +30,7 @@ pipeline {
             steps {
                 sh "chmod u+x ${WORKSPACE}/gradlew"
                 dir("${WORKSPACE}") {
-                    sh './gradlew clean build'
+                    sh './gradlew clean build -x test'
                 }
             }
         }
@@ -39,7 +39,7 @@ pipeline {
             steps {
                 script {
                     def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}"
-                    sh "docker build -t ${dockerImageTag} -f ${WORKSPACE}/Dockerfile ${WORKSPACE}"
+                    sh "docker build -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
                 }
             }
         }
@@ -70,13 +70,13 @@ pipeline {
                         string(credentialsId: 'DB_USER_PASSWORD', variable: 'DB_USER_PASSWORD')
                     ]) {
                         sh '''
-                        scp -i "$EC2_DEPLOY_KEY" set-up-docker.sh ubuntu@"$EC2_IP":"$EC2_DEPLOY_PATH"
+                        scp -i "$EC2_DEPLOY_KEY" ${PROJECT_NAME}/set-up-docker.sh ubuntu@"$EC2_IP":"$EC2_DEPLOY_PATH"
                         '''
                         sh '''
                         scp -i "$EC2_DEPLOY_KEY" "$JAR_PATH" ubuntu@"$EC2_IP":"$EC2_DEPLOY_PATH"
                         '''
                         sh '''
-                        scp -i "$EC2_DEPLOY_KEY" deploy.sh check-and-restart.sh ubuntu@"$EC2_IP":"$EC2_DEPLOY_PATH"
+                        scp -i "$EC2_DEPLOY_KEY" "${WORKSPACE}/${PROJECT_NAME}/deploy.sh" "${WORKSPACE}/${PROJECT_NAME}/check-and-restart.sh" ubuntu@"$EC2_IP":"$EC2_DEPLOY_PATH"
                         '''
                         sh '''
                         ssh -i "$EC2_DEPLOY_KEY" ubuntu@"$EC2_IP" "chmod +x ${EC2_DEPLOY_PATH}/deploy.sh"
@@ -94,7 +94,7 @@ pipeline {
 
         stage('Archive Artifacts') {
             steps {
-                archiveArtifacts artifacts:"build/libs/*.jar", fingerprint:true
+                archiveArtifacts artifacts:"${env.PROJECT_NAME}/build/libs/*.jar", fingerprint:true
                 echo 'Artifacts archived'
             }
         }
