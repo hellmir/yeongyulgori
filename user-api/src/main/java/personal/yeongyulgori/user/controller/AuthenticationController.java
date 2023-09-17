@@ -32,9 +32,10 @@ public class AuthenticationController {
 
     @ApiOperation(value = "회원 가입", notes = "회원 가입 양식을 입력해 회원 가입을 할 수 있습니다.")
     @PostMapping("sign-up")
-    public ResponseEntity<UserResponseDto> signUpUser(
-            @Validated(OnSignUp.class) @RequestBody @ApiParam(value = "회원 가입 양식") SignUpForm signUpForm
-    ) {
+    public ResponseEntity<UserResponseDto> signUpUser
+            (@Validated(OnSignUp.class)
+             @RequestBody @ApiParam(value = "회원 가입 양식")
+             SignUpForm signUpForm) {
 
         UserResponseDto userResponseDto = authenticationService.signUpUser(signUpForm);
 
@@ -46,9 +47,10 @@ public class AuthenticationController {
 
     @ApiOperation(value = "로그인", notes = "email 또는 username과 비밀번호를 입력해 로그인을 할 수 있습니다.")
     @PostMapping("sign-in")
-    public ResponseEntity<String> signInUser(
-            @Validated(OnSignIn.class) @RequestBody @ApiParam(value = "로그인 양식") SignInForm signInForm
-    ) {
+    public ResponseEntity<String> signInUser
+            (@Validated(OnSignIn.class)
+             @RequestBody @ApiParam(value = "로그인 양식")
+             SignInForm signInForm) {
 
         String token = authenticationService.signInUser(signInForm);
 
@@ -58,9 +60,8 @@ public class AuthenticationController {
 
     @ApiOperation(value = "회원 개인정보 조회", notes = "사용자 이름을 입력해 회원 개인정보를 조회할 수 있습니다.")
     @GetMapping("{username}/details")
-    public ResponseEntity<UserResponseDto> getUserInformation(
-            @PathVariable @ApiParam(value = "사용자 이름", example = "gildong1234") String username
-    ) {
+    public ResponseEntity<UserResponseDto> getUserInformation
+            (@PathVariable @ApiParam(value = "사용자 이름", example = "gildong1234") String username) {
 
         UserResponseDto userResponseDto = authenticationService.getUserDetails(username);
 
@@ -71,11 +72,11 @@ public class AuthenticationController {
     @ApiOperation(value = "회원 정보 수정",
             notes = "수정할 변수(id 제외)를 1개 또는 여러 개 입력해 회원 정보를 수정할 수 있습니다.")
     @PatchMapping("{username}")
-    public ResponseEntity<UserResponseDto> updateUserInformation(
-            @ApiParam(value = "사용자 이름", example = "gildong1234") @PathVariable String username,
-            @Valid @RequestBody @ApiParam(value = "회원 정보 수정 양식")
-            InformationUpdateForm informationUpdateForm
-    ) {
+    public ResponseEntity<UserResponseDto> updateUserInformation
+            (@PathVariable @ApiParam(value = "사용자 이름", example = "gildong1234")
+             String username,
+             @Valid @RequestBody @ApiParam(value = "회원 정보 수정 양식")
+             InformationUpdateForm informationUpdateForm) {
 
         UserResponseDto userResponseDto = authenticationService
                 .updateUserInformation(username, informationUpdateForm);
@@ -87,11 +88,11 @@ public class AuthenticationController {
 
     @ApiOperation(value = "주요 회원 정보 수정", notes = "비밀번호를 입력해 하나의 중요한 회원 정보를 수정할 수 있습니다.")
     @PatchMapping("{username}/auth")
-    public ResponseEntity<Void> updateUserInformationWithAuthentication(
-            @ApiParam(value = "사용자 이름", example = "gildong1234") @PathVariable String username,
-            @Valid @RequestBody @ApiParam(value = "회원 정보 수정 양식")
-            CrucialInformationUpdateDto crucialInformationUpdateDto
-    ) {
+    public ResponseEntity<Void> updateUserInformationWithAuthentication
+            (@PathVariable @ApiParam(value = "사용자 이름", example = "gildong1234")
+             String username,
+             @Valid @RequestBody @ApiParam(value = "회원 정보 수정 양식")
+             CrucialInformationUpdateDto crucialInformationUpdateDto) {
 
         authenticationService.updateCrucialUserInformation(username, crucialInformationUpdateDto);
 
@@ -102,9 +103,8 @@ public class AuthenticationController {
 
     @ApiOperation(value = "비밀번호 재설정 요청", notes = "비밀번호를 잊어 버린 경우 인증을 통해 재설정을 요청할 수 있습니다.")
     @PostMapping("password-reset/request")
-    public ResponseEntity<Void> requestPasswordReset(
-            @ApiParam(value = "이메일 주소", example = "abcd@abc.com") String email
-    ) {
+    public ResponseEntity<Void> requestPasswordReset
+            (@ApiParam(value = "이메일 주소", example = "abcd@abc.com") String email) {
 
         authenticationService.requestPasswordReset(email);
 
@@ -114,10 +114,9 @@ public class AuthenticationController {
 
     @ApiOperation(value = "비밀번호 재설정", notes = "인증에 성공하면 새로운 비밀번호를 설정할 수 있습니다.")
     @PatchMapping("password-reset")
-    public ResponseEntity<Void> resetPassword(
-            @ApiParam(value = "토큰") String token,
-            @ApiParam(value = "비밀번호", example = "1234") String password
-    ) {
+    public ResponseEntity<Void> resetPassword
+            (@ApiParam(value = "토큰") String token,
+             @ApiParam(value = "비밀번호", example = "1234") String password) {
 
         authenticationService.resetPassword(token, password);
 
@@ -127,10 +126,9 @@ public class AuthenticationController {
 
     @ApiOperation(value = "회원 탈퇴", notes = "비밀번호를 입력해 회원을 탈퇴할 수 있습니다.")
     @DeleteMapping("{username}")
-    public ResponseEntity<Void> deleteUser(
-            @ApiParam(value = "사용자 이름", example = "gildong1234") @PathVariable String username,
-            @ApiParam(value = "비밀번호", example = "1234") String password
-    ) {
+    public ResponseEntity<Void> deleteUser
+            (@ApiParam(value = "사용자 이름", example = "gildong1234") @PathVariable String username,
+             @ApiParam(value = "비밀번호", example = "1234") String password) {
 
         authenticationService.deleteUser(username, password);
 

@@ -8,8 +8,8 @@ import personal.yeongyulgori.user.base.BaseEntity;
 import personal.yeongyulgori.user.constant.Role;
 import personal.yeongyulgori.user.domain.Address;
 import personal.yeongyulgori.user.domain.InformationUpdateForm;
-import personal.yeongyulgori.user.domain.SignUpForm;
-import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.domain.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.domain.form.SignUpForm;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -51,16 +51,16 @@ public class User extends BaseEntity {
     @Embedded
     private Address address;
 
-    @Lob
+    @Column(columnDefinition = "MEDIUMBLOB")
     private byte[] profileImage;
 
     @Column(nullable = false)
     @Enumerated(STRING)
     private Role role;
 
-    private LocalDateTime verifyExpiredAt;
+    private boolean isVerified;
     private String verificationCode;
-    private boolean verify;
+    private LocalDateTime verificationExpiredAt;
 
     @Builder
     private User(Long id, String email, String username, String password, String name,
@@ -116,37 +116,19 @@ public class User extends BaseEntity {
                 .name(Optional.ofNullable(informationUpdateForm.getName()).orElse(name))
                 .birthDate(birthDate)
                 .phoneNumber(phoneNumber)
-                .address(
-                        Optional.ofNullable(informationUpdateForm.getAddress()).isPresent() ?
-                                Address.builder()
-                                        .city(Optional.ofNullable(
-                                                                informationUpdateForm.getAddress().getCity()
-                                                        )
-                                                        .orElse(address.getCity())
-                                        )
-                                        .street(Optional.ofNullable(
-                                                                informationUpdateForm.getAddress().getStreet()
-                                                        )
-                                                        .orElse(address.getStreet())
-
-                                        )
-                                        .zipcode(
-                                                Optional.ofNullable(
-                                                                informationUpdateForm
-                                                                        .getAddress().getZipcode()
-                                                        )
-                                                        .orElse(address.getZipcode())
-                                        )
-                                        .detailedAddress(
-                                                Optional.ofNullable(
-                                                                informationUpdateForm
-                                                                        .getAddress().getDetailedAddress()
-                                                        )
-                                                        .orElse(address.getDetailedAddress())
-                                        )
-                                        .build()
-                                : address
-                )
+                .address(Optional.ofNullable(informationUpdateForm.getAddress()).isPresent()
+                        ? Address.builder()
+                        .city(Optional.ofNullable(informationUpdateForm.getAddress().getCity())
+                                .orElse(address.getCity()))
+                        .street(Optional.ofNullable(informationUpdateForm.getAddress().getStreet())
+                                .orElse(address.getStreet()))
+                        .zipcode(Optional.ofNullable(informationUpdateForm.getAddress().getZipcode())
+                                .orElse(address.getZipcode()))
+                        .detailedAddress(Optional.ofNullable(informationUpdateForm
+                                        .getAddress().getDetailedAddress())
+                                .orElse(address.getDetailedAddress()))
+                        .build()
+                        : address)
                 .role(Optional.ofNullable(informationUpdateForm.getRole()).orElse(role))
                 .profileImage(Optional.ofNullable(decodedImage).orElse(profileImage))
                 .createdAt(getCreatedAt())

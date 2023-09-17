@@ -64,10 +64,10 @@ class AuthenticationControllerTest {
 
         // given
 
-        SignUpForm signUpForm = enterUserFormWithAddress(
-                "abcd@abc.com", "gildong1234", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER
-        );
+        SignUpForm signUpForm = enterUserFormWithAddress
+                ("abcd@abc.com", "gildong1234", "1234", "홍길동",
+                        LocalDate.of(2000, 1, 1),
+                        "01012345678", GENERAL_USER);
 
         UserResponseDto userResponseDto = UserResponseDto.of(
                 "abcd@abc.com", "gildong1234", "홍길동",
@@ -79,11 +79,9 @@ class AuthenticationControllerTest {
 
         // when, then
 
-        mockMvc.perform(
-                        post("/users/v1/sign-up")
-                                .content(objectMapper.writeValueAsString(signUpForm))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        mockMvc.perform(post("/users/v1/sign-up")
+                        .content(objectMapper.writeValueAsString(signUpForm))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isCreated());
 
@@ -95,10 +93,10 @@ class AuthenticationControllerTest {
 
         // given
 
-        SignUpForm signUpForm = enterUserFormWithAddress(
-                "abcd@abc.com", "gildong1234", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        SignUpForm signUpForm = enterUserFormWithAddress
+                ("abcd@abc.com", "gildong1234", "1234", "홍길동",
+                        LocalDate.of(2000, 1, 1),
+                        "01012345678", Role.GENERAL_USER);
 
         // when, then
 
@@ -119,10 +117,9 @@ class AuthenticationControllerTest {
         // given
         String username = "gildong1234";
 
-        User user = createUserWithAddress(
-                "abcd@abc.com", username, "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        User user = createUserWithAddress("abcd@abc.com", username, "1234",
+                "홍길동", LocalDate.of(2000, 1, 1),
+                "01012345678", Role.GENERAL_USER);
 
         userRepository.save(user);
 
@@ -131,9 +128,7 @@ class AuthenticationControllerTest {
         when(authenticationService.getUserDetails(username)).thenReturn(userResponseDto);
 
         // when, then
-        mockMvc.perform(
-                        get("/users/v1/{username}/details", username)
-                )
+        mockMvc.perform(get("/users/v1/{username}/details", username))
                 .andDo(print())
                 .andExpect(status().isOk());
 
@@ -147,10 +142,8 @@ class AuthenticationControllerTest {
 
         String username = "gildong1234";
 
-        User user = createUser(
-                "abcd@abc.com", username, "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", username, "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER);
 
         userRepository.save(user);
 
@@ -167,11 +160,9 @@ class AuthenticationControllerTest {
 
         // when, then
 
-        mockMvc.perform(
-                        patch("/users/v1/{username}", username)
-                                .content(objectMapper.writeValueAsString(informationUpdateForm))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        mockMvc.perform(patch("/users/v1/{username}", username)
+                        .content(objectMapper.writeValueAsString(informationUpdateForm))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk());
 
@@ -185,10 +176,8 @@ class AuthenticationControllerTest {
 
         String username = "gildong1234";
 
-        User user = createUser(
-                "abcd@abc.com", username, "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", username, "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER);
 
         userRepository.save(user);
 
@@ -209,11 +198,9 @@ class AuthenticationControllerTest {
 
         // when, then
 
-        mockMvc.perform(
-                        patch("/users/v1/{username}", username)
-                                .content(objectMapper.writeValueAsString(informationUpdateForm))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        mockMvc.perform(patch("/users/v1/{username}", username)
+                        .content(objectMapper.writeValueAsString(informationUpdateForm))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk());
 
@@ -227,10 +214,8 @@ class AuthenticationControllerTest {
 
         String username = "gildong1234";
 
-        User user = createUser(
-                "abcd@abc.com", username, "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", username, "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER);
 
         userRepository.save(user);
 
@@ -241,11 +226,9 @@ class AuthenticationControllerTest {
 
         // when, then
 
-        mockMvc.perform(
-                        patch("/users/v1/{username}/auth", username)
-                                .content(objectMapper.writeValueAsString(crucialInformationUpdateDto))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        mockMvc.perform(patch("/users/v1/{username}/auth", username)
+                        .content(objectMapper.writeValueAsString(crucialInformationUpdateDto))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
@@ -257,20 +240,16 @@ class AuthenticationControllerTest {
 
         // given
 
-        User user = createUser(
-                "abcd@abc.com", "gildong1234", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", "gildong1234", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER);
 
         userRepository.save(user);
 
         // when, then
 
-        mockMvc.perform(
-                        post("/users/v1/password-reset/request")
-                                .content(objectMapper.writeValueAsString(user.getEmail()))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        mockMvc.perform(post("/users/v1/password-reset/request")
+                        .content(objectMapper.writeValueAsString(user.getEmail()))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
@@ -282,10 +261,8 @@ class AuthenticationControllerTest {
 
         // given
 
-        User user = createUser(
-                "abcd@abc.com", "gildong1234", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", "gildong1234", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER);
 
         userRepository.save(user);
 
@@ -293,12 +270,10 @@ class AuthenticationControllerTest {
 
         // when, then
 
-        mockMvc.perform(
-                        patch("/users/v1/password-reset")
-                                .param("token", token)
-                                .param("password", user.getPassword())
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        mockMvc.perform(patch("/users/v1/password-reset")
+                        .param("token", token)
+                        .param("password", user.getPassword())
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
@@ -310,21 +285,17 @@ class AuthenticationControllerTest {
 
         // given
 
-        User user = createUser(
-                "abcd@abc.com", "gildong1234", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", "gildong1234", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER);
 
         userRepository.save(user);
 
         // when, then
 
-        mockMvc.perform(
-                        delete("/users/v1/{username}", user.getUsername())
-                                .param("username", user.getUsername())
-                                .param("password", user.getPassword())
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        mockMvc.perform(delete("/users/v1/{username}", user.getUsername())
+                        .param("username", user.getUsername())
+                        .param("password", user.getPassword())
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 

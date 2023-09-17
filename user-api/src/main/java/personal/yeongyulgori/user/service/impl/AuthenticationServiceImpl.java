@@ -42,10 +42,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("User signed up successfully for email: {}, username: {}",
                 savedUser.getEmail(), savedUser.getUsername());
 
-        return UserResponseDto.of(
-                savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(),
-                savedUser.getRole(), savedUser.getCreatedAt(), savedUser.getModifiedAt()
-        );
+        return UserResponseDto.of(savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(),
+                savedUser.getRole(), savedUser.getCreatedAt(), savedUser.getModifiedAt());
 
     }
 
@@ -88,9 +86,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void updateCrucialUserInformation(
-            String username, CrucialInformationUpdateDto crucialInformationUpdateDto
-    ) {
+    public void updateCrucialUserInformation
+            (String username, CrucialInformationUpdateDto crucialInformationUpdateDto) {
 
         log.info("Beginning to update crucial user information for username: {}", username);
 
