@@ -3,7 +3,6 @@
 <br>
 
 ## 프로젝트 설명
-
 - 온라인 상에서 다른 사람들과 소통이 가능한 소셜 미디어 서비스(SNS)
   <br><br>
 
@@ -30,6 +29,7 @@
 
 - Jenkins 2.414.1
 - Docker 24.0.6
+- AWS EC2
   <br><br>
 
 ## Deployed Server URI(변경 예정)
