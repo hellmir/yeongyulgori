@@ -1,9 +1,9 @@
 package personal.yeongyulgori.user.testutil;
 
 import personal.yeongyulgori.user.constant.Role;
-import personal.yeongyulgori.user.domain.Address;
-import personal.yeongyulgori.user.domain.SignUpForm;
-import personal.yeongyulgori.user.domain.model.User;
+import personal.yeongyulgori.user.model.Address;
+import personal.yeongyulgori.user.model.entity.User;
+import personal.yeongyulgori.user.model.form.SignUpForm;
 
 import java.time.LocalDate;
 
@@ -43,14 +43,12 @@ public class TestObjectFactory {
                 .name(name)
                 .birthDate(birthDate)
                 .phoneNumber(phoneNumber)
-                .address(
-                        Address.builder()
-                                .city("서울")
-                                .street("테헤란로 2길 5")
-                                .zipcode("12345")
-                                .detailedAddress("101동 102호")
-                                .build()
-                )
+                .address(Address.builder()
+                        .city("서울")
+                        .street("테헤란로 2길 5")
+                        .zipcode("12345")
+                        .detailedAddress("101동 102호")
+                        .build())
                 .role(role)
                 .profileImage(TEST_IMAGE)
                 .build();
@@ -84,14 +82,12 @@ public class TestObjectFactory {
                 .name(name)
                 .birthDate(birthDate)
                 .phoneNumber(phoneNumber)
-                .address(
-                        Address.builder()
-                                .city("서울")
-                                .street("테헤란로 2길 5")
-                                .zipcode("12345")
-                                .detailedAddress("101동 102호")
-                                .build()
-                )
+                .address(Address.builder()
+                        .city("서울")
+                        .street("테헤란로 2길 5")
+                        .zipcode("12345")
+                        .detailedAddress("101동 102호")
+                        .build())
                 .profileImage(TEST_IMAGE.getBytes())
                 .role(role)
                 .build();
