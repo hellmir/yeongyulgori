@@ -55,10 +55,8 @@ class UserControllerTest {
         // given
         String username = "gildong1234";
 
-        User user = createUserWithAddress(
-                "abcd@abc.com", username, "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER
-        );
+        User user = createUserWithAddress("abcd@abc.com", username, "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER);
 
         userRepository.save(user);
 
