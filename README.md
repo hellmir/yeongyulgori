@@ -8,14 +8,16 @@
   <br><br>
 
 ## Deployed Server URI(변경 예정)
-### [배포 서버](yeongyulgori.myduckdns.org:610)
+### yeongyulgori.myduckdns.org:610
+<br>
 
 ## Swagger URI(변경 예정)
-### [Swagger](yeongyulgori.duckdns.org:610/swagger-ui/index.html)
+### yeongyulgori.duckdns.org:610/swagger-ui/index.html
+<br>
 
 ## API Servers
-
 ### [사용자 API 서버](https://github.com/hellmir/yeongyulgori/tree/main/user-api)
+<br>
 
 ## Architecture
 ![yeongyulgori-architecture](https://github.com/hellmir/yeongyulgori/assets/128391669/27c3e931-a42d-4ff0-8935-e0b0b58fc540)
