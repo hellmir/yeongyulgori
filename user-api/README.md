@@ -32,10 +32,10 @@
   <br><br>
 
 ## Deployed Server URI(변경 예정)
-yeongyulgori.myduckdns.org:610
+### [배포 서버](yeongyulgori.myduckdns.org:610)
 
 ## Swagger URI(변경 예정)
-yeongyulgori.duckdns.org:610/swagger-ui/index.html
+### [Swagger](yeongyulgori.duckdns.org:610/swagger-ui/index.html)
 
 ## Server Endpoints
 
