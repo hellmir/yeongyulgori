@@ -284,4 +284,38 @@ class UserRepositoryTest {
 
     }
 
+    @DisplayName("키워드를 포함하지 않으면 모든 회원을 페이징 처리해 찾을 수 있다.")
+    @Test
+    void findAllWithPaging() {
+
+        // given
+        User user1 = createUser("abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(1990, 01, 01), "01012345678", GENERAL_USER);
+
+        User user2 = createUser("abcd@abcd.com", "person2", "12345", "고길동",
+                LocalDate.of(2000, 02, 10), "01012345679", BUSINESS_USER);
+
+        User user3 = createUser("abcd@abcde.com", "person3", "123456", "홍길숙",
+                LocalDate.of(2010, 03, 20), "01012345670", BUSINESS_USER);
+
+        User user4 = createUser("abcd@abcdef.com", "person4", "1234567", "홍길이",
+                LocalDate.of(2020, 04, 30), "01012345671", GENERAL_USER);
+
+        userRepository.saveAll(List.of(user1, user2, user3, user4));
+
+        Pageable pageable = PageRequest.of(0, 2);
+
+        // when
+        Page<User> foundUsers = userRepository.findByNameContaining("", pageable);
+
+        // then
+        assertThat(foundUsers).hasSize(2)
+                .extracting("email", "username", "name", "role")
+                .containsExactlyInAnyOrder(
+                        tuple("abcd@abc.com", "person1", "홍길동", GENERAL_USER),
+                        tuple("abcd@abcd.com", "person2", "고길동", BUSINESS_USER)
+                );
+
+    }
+
 }

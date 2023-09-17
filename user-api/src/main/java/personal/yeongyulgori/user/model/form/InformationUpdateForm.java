@@ -1,4 +1,4 @@
-package personal.yeongyulgori.user.domain;
+package personal.yeongyulgori.user.model;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
