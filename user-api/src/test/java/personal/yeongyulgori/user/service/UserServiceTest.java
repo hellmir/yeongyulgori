@@ -27,7 +27,7 @@ import static personal.yeongyulgori.user.testutil.TestObjectFactory.createUser;
 
 @ActiveProfiles("test")
 @SpringBootTest
-class UserServiceImplTest {
+class UserServiceTest {
 
     @Autowired
     private UserRepository userRepository;
