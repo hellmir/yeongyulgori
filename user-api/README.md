@@ -63,6 +63,8 @@ yeongyulgori.duckdns.org:610/swagger-ui/index.html
 - **회원 프로필 조회: /{username}** (GET)
   <br><br>
 
-## ERD
+## Architecture
+![User-ERD](https://github.com/hellmir/yeongyulgori/assets/128391669/4a2848a2-4fc1-46af-8224-58f3dbb31d1b)
 
-![ERD](https://github.com/hellmir/yeongyulgori/assets/128391669/8ec1f0da-f845-4a31-ab7e-2b0b4d9afba2)
+## ERD
+![User-API](https://github.com/hellmir/yeongyulgori/assets/128391669/c3f7d323-413c-45a3-8f93-ca97fc6dbe6a)
