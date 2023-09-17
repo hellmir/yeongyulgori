@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import personal.yeongyulgori.user.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.dto.UserResponseDto;
 import personal.yeongyulgori.user.service.AutoCompleteService;
 import personal.yeongyulgori.user.service.UserService;
 

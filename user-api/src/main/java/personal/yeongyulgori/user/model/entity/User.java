@@ -1,4 +1,4 @@
-package personal.yeongyulgori.user.domain.model;
+package personal.yeongyulgori.user.model.entity;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -6,10 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import personal.yeongyulgori.user.base.BaseEntity;
 import personal.yeongyulgori.user.constant.Role;
-import personal.yeongyulgori.user.domain.Address;
-import personal.yeongyulgori.user.domain.InformationUpdateForm;
-import personal.yeongyulgori.user.domain.dto.CrucialInformationUpdateDto;
-import personal.yeongyulgori.user.domain.form.SignUpForm;
+import personal.yeongyulgori.user.model.Address;
+import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.form.InformationUpdateForm;
+import personal.yeongyulgori.user.model.form.SignUpForm;
 
 import javax.persistence.*;
 import java.time.LocalDate;
