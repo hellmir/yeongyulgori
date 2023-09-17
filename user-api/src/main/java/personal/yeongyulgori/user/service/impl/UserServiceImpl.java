@@ -10,9 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
-import personal.yeongyulgori.user.domain.model.User;
-import personal.yeongyulgori.user.domain.repository.UserRepository;
-import personal.yeongyulgori.user.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.entity.User;
+import personal.yeongyulgori.user.model.repository.UserRepository;
 import personal.yeongyulgori.user.service.UserService;
 
 import javax.persistence.EntityNotFoundException;
