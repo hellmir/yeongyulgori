@@ -8,7 +8,7 @@
   <br><br>
 
 ## Deployed Server URI(변경 예정)
-### yeongyulgori.myduckdns.org:610
+### yeongyulgori.duckdns.org:610
 <br>
 
 ## Swagger URI(변경 예정)
