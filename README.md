@@ -1,11 +1,17 @@
-# SNS 연결고리 프로젝트 user API 서버
+# SNS 연결고리 프로젝트
 
 <br>
 
-## API 설명
+## 프로젝트 설명
 
 - 온라인 상에서 다른 사람들과 소통이 가능한 소셜 미디어 서비스(SNS)
   <br><br>
+
+## Deployed Server URI(변경 예정)
+### [배포 서버](yeongyulgori.myduckdns.org:610)
+
+## Swagger URI(변경 예정)
+### [Swagger](yeongyulgori.duckdns.org:610/swagger-ui/index.html)
 
 ## API Servers
 
