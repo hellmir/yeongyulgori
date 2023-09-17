@@ -11,9 +11,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import personal.yeongyulgori.user.domain.model.User;
-import personal.yeongyulgori.user.domain.repository.UserRepository;
-import personal.yeongyulgori.user.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.entity.User;
+import personal.yeongyulgori.user.model.repository.UserRepository;
 import personal.yeongyulgori.user.service.AutoCompleteService;
 import personal.yeongyulgori.user.service.UserService;
 
@@ -55,10 +55,8 @@ class UserControllerTest {
         // given
         String username = "gildong1234";
 
-        User user = createUserWithAddress(
-                "abcd@abc.com", username, "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER
-        );
+        User user = createUserWithAddress("abcd@abc.com", username, "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER);
 
         userRepository.save(user);
 
@@ -108,20 +106,19 @@ class UserControllerTest {
         when(userService.getSearchedUsers(keyword, pageable)).thenReturn(userPage);
 
         // when, then
-        mockMvc.perform(
-                        get("/users/v1")
-                )
+        mockMvc.perform(get("/users/v1")
+                        .queryParam("keyword", keyword))
                 .andDo(print())
                 .andExpect(status().isOk());
 
     }
 
-    @DisplayName("일부 성명 키워드를 입력하면 해당하는 회원들의 성명 목록을 조회할 수 있다.")
+    @DisplayName("성명 키워드를 입력하지 않으면 전체 회원 목록을 조회할 수 있다.")
     @Test
-    void autoComplete() throws Exception {
+    void searchUsersWithoutKeyword() throws Exception {
 
         // given
-        String keyword = "홍길";
+        String keyword = "";
 
         User user1 = createUserWithAddress(
                 "abcd@abc.com", "gildong1234", "1234", "홍길동",
@@ -129,14 +126,47 @@ class UserControllerTest {
         );
 
         User user2 = createUserWithAddress(
-                "abcd@abcd.com", "gildong12345", "12345", "고길동",
+                "abcd@abcd.com", "gildong12345", "12345", "홍길숙",
                 LocalDate.of(2000, 2, 2), "01012345678", BUSINESS_USER
         );
 
         User user3 = createUserWithAddress(
-                "abcd@abcde.com", "gildong123456", "123456", "홍길숙",
+                "abcd@abcde.com", "gildong123456", "123456", "고길동",
                 LocalDate.of(2000, 3, 3), "01012345678", GENERAL_USER
         );
+
+        userRepository.saveAll(List.of(user1, user2, user3));
+
+        Pageable pageable = Pageable.ofSize(10);
+
+        List<UserResponseDto> userResponseDtoList = new ArrayList<>();
+
+        Page<UserResponseDto> userPage = new PageImpl<>(userResponseDtoList, pageable, userResponseDtoList.size());
+
+        when(userService.getSearchedUsers(keyword, pageable)).thenReturn(userPage);
+
+        // when, then
+        mockMvc.perform(get("/users/v1"))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+    }
+
+    @DisplayName("일부 성명 키워드를 입력하면 해당하는 회원들의 성명 자동완성 목록을 조회할 수 있다.")
+    @Test
+    void autoComplete() throws Exception {
+
+        // given
+        String keyword = "홍길";
+
+        User user1 = createUserWithAddress("abcd@abc.com", "gildong1234", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", GENERAL_USER);
+
+        User user2 = createUserWithAddress("abcd@abcd.com", "gildong12345", "12345", "고길동",
+                LocalDate.of(2000, 2, 2), "01012345678", BUSINESS_USER);
+
+        User user3 = createUserWithAddress("abcd@abcde.com", "gildong123456", "123456", "홍길숙",
+                LocalDate.of(2000, 3, 3), "01012345678", GENERAL_USER);
 
         userRepository.saveAll(List.of(user1, user2, user3));
 
@@ -145,10 +175,7 @@ class UserControllerTest {
         when(autoCompleteService.autoComplete(keyword)).thenReturn(autoCompleteResults);
 
         // when, then
-        mockMvc.perform(
-                        get("/users/v1/auto-complete")
-                                .queryParam("keyword", keyword)
-                )
+        mockMvc.perform(get("/users/v1/auto-complete"))
                 .andDo(print())
                 .andExpect(status().isOk());
 

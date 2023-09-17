@@ -2,7 +2,7 @@ package personal.yeongyulgori.user.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import personal.yeongyulgori.user.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.dto.UserResponseDto;
 
 public interface UserService {
 

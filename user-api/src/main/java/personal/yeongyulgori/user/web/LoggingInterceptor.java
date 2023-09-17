@@ -21,7 +21,8 @@ public class LoggingInterceptor extends HandlerInterceptorAdapter {
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+    public void afterCompletion
+            (HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         log.info("Completed request for {}", request.getRequestURI());
     }
 

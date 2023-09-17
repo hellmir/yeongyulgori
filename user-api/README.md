@@ -51,7 +51,7 @@
 
 - **회원 가입: /sign-up** (POST)
 - **로그인: /sign-in** (POST)
-- **회원 정보 조회: {username}/details** (GET) 
+- **회원 정보 조회: {username}/details** (GET)
 - **주요 회원 정보 수정: /{username}/auth** (PATCH)
 - **회원 정보 수정: /{username}** (PATCH)
 - **비밀번호 재설정 요청: /password-reset/request** (POST)
@@ -62,7 +62,8 @@
 #### 공통
 
 - **성명 키워드로 회원 검색 시 자동완성: /auto-complete** (GET)
-- **성명 키워드로 회원 목록 조회: /** (GET)
+- **전체 회원 목록 조회: ?pagingOptions=value** (GET)
+- **특정 성명 키워드를 포함한 회원 목록 조회: ?keyword=value&pagingOptions=value** (GET)
 - **회원 프로필 조회: /{username}** (GET)
   <br><br>
 

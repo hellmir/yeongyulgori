@@ -6,17 +6,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import personal.yeongyulgori.user.domain.InformationUpdateForm;
-import personal.yeongyulgori.user.domain.SignInForm;
-import personal.yeongyulgori.user.domain.SignUpForm;
-import personal.yeongyulgori.user.domain.model.User;
-import personal.yeongyulgori.user.domain.repository.UserRepository;
-import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
-import personal.yeongyulgori.user.dto.UserResponseDto;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
 import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException;
 import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
+import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.entity.User;
+import personal.yeongyulgori.user.model.form.InformationUpdateForm;
+import personal.yeongyulgori.user.model.form.SignInForm;
+import personal.yeongyulgori.user.model.form.SignUpForm;
+import personal.yeongyulgori.user.model.repository.UserRepository;
 import personal.yeongyulgori.user.service.AuthenticationService;
 
 import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
@@ -42,10 +42,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("User signed up successfully for email: {}, username: {}",
                 savedUser.getEmail(), savedUser.getUsername());
 
-        return UserResponseDto.of(
-                savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(),
-                savedUser.getRole(), savedUser.getCreatedAt(), savedUser.getModifiedAt()
-        );
+        return UserResponseDto.of(savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(),
+                savedUser.getRole(), savedUser.getCreatedAt(), savedUser.getModifiedAt());
 
     }
 
@@ -88,9 +86,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void updateCrucialUserInformation(
-            String username, CrucialInformationUpdateDto crucialInformationUpdateDto
-    ) {
+    public void updateCrucialUserInformation
+            (String username, CrucialInformationUpdateDto crucialInformationUpdateDto) {
 
         log.info("Beginning to update crucial user information for username: {}", username);
 

@@ -1,4 +1,4 @@
-package personal.yeongyulgori.user.dto;
+package personal.yeongyulgori.user.model.dto;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;

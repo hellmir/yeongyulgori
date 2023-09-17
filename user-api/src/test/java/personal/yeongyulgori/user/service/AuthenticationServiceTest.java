@@ -9,18 +9,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import personal.yeongyulgori.user.constant.Role;
-import personal.yeongyulgori.user.domain.Address;
-import personal.yeongyulgori.user.domain.InformationUpdateForm;
-import personal.yeongyulgori.user.domain.SignInForm;
-import personal.yeongyulgori.user.domain.SignUpForm;
-import personal.yeongyulgori.user.domain.model.User;
-import personal.yeongyulgori.user.domain.repository.UserRepository;
-import personal.yeongyulgori.user.dto.CrucialInformationUpdateDto;
-import personal.yeongyulgori.user.dto.UserResponseDto;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
 import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException;
 import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
+import personal.yeongyulgori.user.model.Address;
+import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.entity.User;
+import personal.yeongyulgori.user.model.form.InformationUpdateForm;
+import personal.yeongyulgori.user.model.form.SignInForm;
+import personal.yeongyulgori.user.model.form.SignUpForm;
+import personal.yeongyulgori.user.model.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -76,17 +76,15 @@ class AuthenticationServiceTest {
 
         // given
 
-        SignUpForm signUpForm1 = enterUserForm(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        SignUpForm signUpForm1 = enterUserForm("abcd@abc.com", "person1",
+                "1234", "홍길동", LocalDate.of(2000, 1, 1),
+                "01012345678", Role.GENERAL_USER);
 
         authenticationService.signUpUser(signUpForm1);
 
-        SignUpForm signUpForm2 = enterUserForm(
-                "abcd@abc.com", "person2", "12345", "고길동",
-                LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER
-        );
+        SignUpForm signUpForm2 = enterUserForm("abcd@abc.com", "person2",
+                "12345", "고길동", LocalDate.of(2000, 2, 2),
+                "01012345679", BUSINESS_USER);
 
         // when, then
         assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
@@ -101,17 +99,15 @@ class AuthenticationServiceTest {
 
         // given
 
-        SignUpForm signUpForm1 = enterUserForm(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        SignUpForm signUpForm1 = enterUserForm("abcd@abc.com", "person1",
+                "1234", "홍길동", LocalDate.of(2000, 1, 1),
+                "01012345678", Role.GENERAL_USER);
 
         authenticationService.signUpUser(signUpForm1);
 
-        SignUpForm signUpForm2 = enterUserForm(
-                "abcd@abcd.com", "person2", "12345", "고길동",
-                LocalDate.of(2000, 2, 2), "01012345678", BUSINESS_USER
-        );
+        SignUpForm signUpForm2 = enterUserForm("abcd@abcd.com", "person2",
+                "12345", "고길동", LocalDate.of(2000, 2, 2),
+                "01012345678", BUSINESS_USER);
 
         // when, then
         assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
@@ -126,17 +122,15 @@ class AuthenticationServiceTest {
 
         // given
 
-        SignUpForm signUpForm1 = enterUserForm(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        SignUpForm signUpForm1 = enterUserForm("abcd@abc.com", "person1",
+                "1234", "홍길동", LocalDate.of(2000, 1, 1),
+                "01012345678", Role.GENERAL_USER);
 
         authenticationService.signUpUser(signUpForm1);
 
-        SignUpForm signUpForm2 = enterUserForm(
-                "abcd@abcd.com", "person1", "12345", "고길동",
-                LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER
-        );
+        SignUpForm signUpForm2 = enterUserForm("abcd@abcd.com", "person1",
+                "12345", "고길동", LocalDate.of(2000, 2, 2),
+                "01012345679", BUSINESS_USER);
 
         // when, then
         assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
@@ -168,10 +162,8 @@ class AuthenticationServiceTest {
             "abcd@abcd.com, person2, 12345, 고길동, 2000-02-02, 01012345679, BUSINESS_USER",
             "abcd@abcde.com, person3, 123456, 김길동, 2000-03-03, 01012345680, GENERAL_USER"
     })
-    void getUserDetails(
-            String email, String username, String password, String name,
-            LocalDate birthDate, String phoneNumber, Role role
-    ) {
+    void getUserDetails(String email, String username, String password, String name,
+                        LocalDate birthDate, String phoneNumber, Role role) {
 
         // given
         User user = createUser(email, username, password, name, birthDate, phoneNumber, role);
@@ -194,10 +186,8 @@ class AuthenticationServiceTest {
     void getUserDetailsByWrongUsername() {
 
         // given
-        User user = createUser(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
 
         userRepository.save(user);
 
@@ -213,18 +203,15 @@ class AuthenticationServiceTest {
     void updateUserInformation() {
 
         // given
-        User user1 = createUserWithAddress(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
-        User user2 = createUserWithAddress(
-                "abcd@abcd.com", "person2", "12345", "고길동",
-                LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER
-        );
-        User user3 = createUserWithAddress(
-                "abcd@abcde.com", "person3", "123456", "길동",
-                LocalDate.of(2000, 3, 3), "01012345670", Role.GENERAL_USER
-        );
+        User user1 = createUserWithAddress("abcd@abc.com", "person1",
+                "1234", "홍길동", LocalDate.of(2000, 1, 1),
+                "01012345678", Role.GENERAL_USER);
+        User user2 = createUserWithAddress("abcd@abcd.com", "person2",
+                "12345", "고길동", LocalDate.of(2000, 2, 2),
+                "01012345679", BUSINESS_USER);
+        User user3 = createUserWithAddress("abcd@abcde.com", "person3",
+                "123456", "길동", LocalDate.of(2000, 3, 3),
+                "01012345670", Role.GENERAL_USER);
 
         userRepository.saveAll(List.of(user1, user2, user3));
 
@@ -284,10 +271,8 @@ class AuthenticationServiceTest {
     void updateUserInformationByWrongUserId() {
 
         // given
-        User user = createUser(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
 
         userRepository.save(user);
 
@@ -296,9 +281,8 @@ class AuthenticationServiceTest {
                 .build();
 
         // when, then
-        assertThatThrownBy(
-                () -> authenticationService.updateUserInformation(user.getUsername(), informationUpdateForm)
-        )
+        assertThatThrownBy(() -> authenticationService
+                .updateUserInformation(user.getUsername(), informationUpdateForm))
                 .isInstanceOf(NonExistentUserException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: " + user.getUsername());
 
@@ -309,18 +293,12 @@ class AuthenticationServiceTest {
     void updateCrucialUserInformation() {
 
         // given
-        User user1 = createUser(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
-        User user2 = createUser(
-                "abcd@abcd.com", "person2", "12345", "고길동",
-                LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER
-        );
-        User user3 = createUser(
-                "abcd@abcde.com", "person3", "123456", "길동",
-                LocalDate.of(2000, 3, 3), "01012345670", Role.GENERAL_USER
-        );
+        User user1 = createUser("abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
+        User user2 = createUser("abcd@abcd.com", "person2", "12345", "고길동",
+                LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER);
+        User user3 = createUser("abcd@abcde.com", "person3", "123456", "길동",
+                LocalDate.of(2000, 3, 3), "01012345670", Role.GENERAL_USER);
 
         userRepository.saveAll(List.of(user1, user2, user3));
 
@@ -369,10 +347,8 @@ class AuthenticationServiceTest {
     void updateCrucialUserInformationByWrongUserId() {
 
         // given
-        User user = createUser(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
 
         userRepository.save(user);
 
@@ -381,11 +357,8 @@ class AuthenticationServiceTest {
                 .build();
 
         // when, then
-        assertThatThrownBy(
-                () -> authenticationService.updateCrucialUserInformation(
-                        user.getUsername(), crucialInformationUpdateDto
-                )
-        )
+        assertThatThrownBy(() -> authenticationService
+                .updateCrucialUserInformation(user.getUsername(), crucialInformationUpdateDto))
                 .isInstanceOf(NonExistentUserException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: " + user.getUsername());
 
@@ -422,17 +395,14 @@ class AuthenticationServiceTest {
     void deleteUserByWrongUsername() {
 
         // given
-        User user = createUser(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
 
         userRepository.save(user);
 
         // when, then
-        assertThatThrownBy(
-                () -> authenticationService.deleteUser("person2", "1234")
-        )
+        assertThatThrownBy(() -> authenticationService
+                .deleteUser("person2", "1234"))
                 .isInstanceOf(NonExistentUserException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: person2");
 
@@ -443,17 +413,14 @@ class AuthenticationServiceTest {
     void deleteUserByWrongPassword() {
 
         // given
-        User user = createUser(
-                "abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER
-        );
+        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
 
         userRepository.save(user);
 
         // when, then
-        assertThatThrownBy(
-                () -> authenticationService.deleteUser("person1", "12345")
-        )
+        assertThatThrownBy(() -> authenticationService
+                .deleteUser("person1", "12345"))
                 .isInstanceOf(IncorrectPasswordException.class)
                 .hasMessage("비밀번호가 일치하지 않습니다.");
 

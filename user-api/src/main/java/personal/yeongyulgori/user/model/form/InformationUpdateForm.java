@@ -1,8 +1,9 @@
-package personal.yeongyulgori.user.domain;
+package personal.yeongyulgori.user.model.form;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 import personal.yeongyulgori.user.constant.Role;
+import personal.yeongyulgori.user.model.Address;
 
 
 @Getter

@@ -12,9 +12,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import personal.yeongyulgori.user.constant.Role;
-import personal.yeongyulgori.user.domain.model.User;
-import personal.yeongyulgori.user.domain.repository.UserRepository;
-import personal.yeongyulgori.user.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.entity.User;
+import personal.yeongyulgori.user.model.repository.UserRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
@@ -27,7 +27,7 @@ import static personal.yeongyulgori.user.testutil.TestObjectFactory.createUser;
 
 @ActiveProfiles("test")
 @SpringBootTest
-class UserServiceImplTest {
+class UserServiceTest {
 
     @Autowired
     private UserRepository userRepository;
@@ -110,6 +110,39 @@ class UserServiceImplTest {
         // when
         Page<UserResponseDto> userResponseDtos = userService.getSearchedUsers(
                 "길동", Pageable.ofSize(2)
+        );
+
+        // then
+        Assertions.assertThat(userResponseDtos).hasSize(2)
+                .extracting("email", "username", "name", "role")
+                .containsExactlyInAnyOrder(
+                        tuple("abcd@abc.com", "person1", "홍길동", GENERAL_USER),
+                        tuple("abcd@abcd.com", "person2", "고길동", BUSINESS_USER)
+                );
+
+    }
+
+    @DisplayName("키워드를 전송하지 않으면 모든 사용자의 목록을 조회할 수 있다.")
+    @Test
+    void getUsersWithoutAnyKeyword() {
+
+        User user1 = createUser("abcd@abc.com", "person1", "1234", "홍길동",
+                LocalDate.of(1990, 01, 01), "01012345678", GENERAL_USER);
+
+        User user2 = createUser("abcd@abcd.com", "person2", "12345", "고길동",
+                LocalDate.of(2000, 02, 10), "01012345679", BUSINESS_USER);
+
+        User user3 = createUser("abcd@abcde.com", "person3", "123456", "김길동",
+                LocalDate.of(2010, 03, 20), "01012345670", GENERAL_USER);
+
+        User user4 = createUser("abcd@abcdef.com", "person4", "1234567", "홍길숙",
+                LocalDate.of(2020, 04, 30), "01012345671", BUSINESS_USER);
+
+        userRepository.saveAll(List.of(user1, user2, user3, user4));
+
+        // when
+        Page<UserResponseDto> userResponseDtos = userService.getSearchedUsers(
+                "", Pageable.ofSize(2)
         );
 
         // then
