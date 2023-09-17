@@ -1,4 +1,4 @@
-package personal.yeongyulgori.user.domain.repository;
+package personal.yeongyulgori.user.model.repository;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import personal.yeongyulgori.user.constant.Role;
-import personal.yeongyulgori.user.domain.model.User;
+import personal.yeongyulgori.user.model.entity.User;
 
 import java.time.LocalDate;
 import java.util.List;

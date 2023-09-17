@@ -1,11 +1,11 @@
-package personal.yeongyulgori.user.dto;
+package personal.yeongyulgori.user.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import personal.yeongyulgori.user.constant.Role;
-import personal.yeongyulgori.user.domain.Address;
-import personal.yeongyulgori.user.domain.model.User;
+import personal.yeongyulgori.user.model.Address;
+import personal.yeongyulgori.user.model.entity.User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -56,10 +56,8 @@ public class UserResponseDto {
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
                 .role(user.getRole())
-                .profileImage(
-                        user.getProfileImage() != null ?
-                                Base64.getEncoder().encodeToString(user.getProfileImage()) : null
-                )
+                .profileImage(user.getProfileImage() != null ?
+                        Base64.getEncoder().encodeToString(user.getProfileImage()) : null)
                 .createdAt(user.getCreatedAt())
                 .modifiedAt(user.getModifiedAt())
                 .build();

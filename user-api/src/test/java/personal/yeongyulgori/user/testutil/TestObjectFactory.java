@@ -1,9 +1,9 @@
 package personal.yeongyulgori.user.testutil;
 
 import personal.yeongyulgori.user.constant.Role;
-import personal.yeongyulgori.user.domain.Address;
-import personal.yeongyulgori.user.domain.SignUpForm;
-import personal.yeongyulgori.user.domain.model.User;
+import personal.yeongyulgori.user.model.Address;
+import personal.yeongyulgori.user.model.entity.User;
+import personal.yeongyulgori.user.model.form.SignUpForm;
 
 import java.time.LocalDate;
 
