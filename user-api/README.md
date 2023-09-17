@@ -9,6 +9,7 @@
 
 ## API 서버 설명
 - 연결고리 프로젝트의 사용자 REST API 서버
+  <br><br>
 
 ## Skills and Environment
 
@@ -32,10 +33,12 @@
   <br><br>
 
 ## Deployed Server URI(변경 예정)
-### [배포 서버](yeongyulgori.myduckdns.org:610)
+### yeongyulgori.myduckdns.org:610
+<br>
 
 ## Swagger URI(변경 예정)
-### [Swagger](yeongyulgori.duckdns.org:610/swagger-ui/index.html)
+### yeongyulgori.duckdns.org:610/swagger-ui/index.html
+<br>
 
 ## Server Endpoints
 
@@ -64,7 +67,7 @@
   <br><br>
 
 ## Architecture
-![User-ERD](https://github.com/hellmir/yeongyulgori/assets/128391669/4a2848a2-4fc1-46af-8224-58f3dbb31d1b)
+![User-API](https://github.com/hellmir/yeongyulgori/assets/128391669/c3f7d323-413c-45a3-8f93-ca97fc6dbe6a)
 
 ## ERD
-![User-API](https://github.com/hellmir/yeongyulgori/assets/128391669/c3f7d323-413c-45a3-8f93-ca97fc6dbe6a)
+![User-ERD](https://github.com/hellmir/yeongyulgori/assets/128391669/4a2848a2-4fc1-46af-8224-58f3dbb31d1b)
