@@ -40,10 +40,8 @@ public class UserServiceImpl implements UserService {
 
         log.info("User profile retrieved successfully for username: {}", username);
 
-        return UserResponseDto.of(
-                user.getEmail(), user.getUsername(), user.getName(),
-                user.getRole(), user.getCreatedAt(), user.getModifiedAt()
-        );
+        return UserResponseDto.of(user.getEmail(), user.getUsername(), user.getName(),
+                user.getRole(), user.getCreatedAt(), user.getModifiedAt());
 
     }
 
@@ -51,7 +49,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 30)
     public Page<UserResponseDto> getSearchedUsers(String keyword, Pageable pageable) {
 
-        log.info("Beginning to retrieve searched users by keyword");
+        log.info("Beginning to retrieve searched users by keyword: {}", keyword);
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -59,10 +57,8 @@ public class UserServiceImpl implements UserService {
         Page<User> users = userRepository.findByNameContaining(keyword, pageable);
 
         List<UserResponseDto> userResponseDtos = users.getContent().stream()
-                .map(user -> UserResponseDto.of(
-                        user.getEmail(), user.getUsername(), user.getName(),
-                        user.getRole(), user.getCreatedAt(), user.getModifiedAt()
-                ))
+                .map(user -> UserResponseDto.of(user.getEmail(), user.getUsername(), user.getName(),
+                        user.getRole(), user.getCreatedAt(), user.getModifiedAt()))
                 .collect(Collectors.toList());
 
         stopWatch.stop();
