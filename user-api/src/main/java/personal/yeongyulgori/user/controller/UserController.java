@@ -34,26 +34,26 @@ public class UserController {
     @ApiOperation(value = "회원 목록",
             notes = "일부 성명 키워드를 입력해 해당하는 회원 목록을 조회할 수 있습니다. 키워드를 입력하지 않으면 전체 회원 목록을 조회합니다. 페이징 옵션을 선택할 수 있습니다.")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "paged", value = "페이지네이션 사용 여부", dataType = "boolean",
+            @ApiImplicitParam(name = "paged", value = "페이지네이션 사용 여부", dataTypeClass = Boolean.class,
+                    paramType = "query", defaultValue = "true", example = "true"),
+            @ApiImplicitParam(name = "unpaged", value = "페이지네이션 미사용 여부", dataTypeClass = Boolean.class,
                     paramType = "query", defaultValue = "false", example = "false"),
-            @ApiImplicitParam(name = "unpaged", value = "페이지네이션 미사용 여부", dataType = "boolean",
-                    paramType = "query", defaultValue = "false", example = "false"),
-            @ApiImplicitParam(name = "offset", value = "목록 시작 위치", dataType = "int",
+            @ApiImplicitParam(name = "offset", value = "목록 시작 위치", dataTypeClass = Integer.class,
                     paramType = "query", defaultValue = "0", example = "0"),
-            @ApiImplicitParam(name = "page", value = "현재 페이지 번호", dataType = "int",
+            @ApiImplicitParam(name = "page", value = "현재 페이지 번호", dataTypeClass = Integer.class,
                     paramType = "query", defaultValue = "0", example = "0"),
-            @ApiImplicitParam(name = "pageNumber", value = "현재 페이지 번호", dataType = "int",
+            @ApiImplicitParam(name = "pageNumber", value = "현재 페이지 번호", dataTypeClass = Integer.class,
                     paramType = "query", defaultValue = "10", example = "10"),
-            @ApiImplicitParam(name = "size", value = "페이지 당 항목 수", dataType = "int",
+            @ApiImplicitParam(name = "size", value = "페이지 당 항목 수", dataTypeClass = Integer.class,
                     paramType = "query", defaultValue = "20", example = "20"),
-            @ApiImplicitParam(name = "pageSize", value = "페이지 당 항목 수", dataType = "int",
-                    paramType = "query", defaultValue = "10", example = "10"),
-            @ApiImplicitParam(name = "sort.sorted", value = "정렬 사용 여부", dataType = "boolean",
+            @ApiImplicitParam(name = "pageSize", value = "페이지 당 항목 수", dataTypeClass = Integer.class,
+                    paramType = "query", defaultValue = "20", example = "20"),
+            @ApiImplicitParam(name = "sort.sorted", value = "정렬 사용 여부", dataTypeClass = Boolean.class,
+                    paramType = "query", defaultValue = "true", example = "true"),
+            @ApiImplicitParam(name = "sort.unsorted", value = "정렬 미사용 여부", dataTypeClass = Boolean.class,
                     paramType = "query", defaultValue = "false", example = "false"),
-            @ApiImplicitParam(name = "sort.unsorted", value = "정렬 미사용 여부", dataType = "boolean",
-                    paramType = "query", defaultValue = "false", example = "false"),
-            @ApiImplicitParam(name = "sort", value = "정렬 방식 (name,asc, name,desc)",
-                    dataType = "string", paramType = "query", example = "name")
+            @ApiImplicitParam(name = "sort", value = "정렬 방식", dataTypeClass = String.class,
+                    paramType = "query", defaultValue = "name,asc", example = "name,asc")
     })
     @GetMapping()
     public ResponseEntity<Page<UserResponseDto>> searchUsers
