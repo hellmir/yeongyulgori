@@ -9,6 +9,6 @@ COPY ./*.jar app.jar
 EXPOSE 8081
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
+  CMD curl -f http://localhost:8081/health || exit 1
 
 CMD ["java", "-jar", "app.jar"]
