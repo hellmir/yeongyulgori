@@ -1,14 +1,11 @@
 package personal.yeongyulgori.post.domain.post.service;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StopWatch;
 import personal.yeongyulgori.post.domain.post.model.dto.PostRequestDto;
 import personal.yeongyulgori.post.domain.post.model.dto.PostResponseDto;
 import personal.yeongyulgori.post.domain.post.model.entity.Post;
@@ -30,16 +27,12 @@ public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
 
-    private static final Logger log = LoggerFactory.getLogger(PostService.class);
 
     @Override
-    public PostResponseDto registerPost(Long userId, PostRequestDto postRegisterDto) {
 
-        log.info("Beginning to register post by userId: {}", userId);
 
         Post savedPost = postRepository.save(Post.of(userId, postRegisterDto.getContent()));
 
-        log.info("Post registered successfully by userId: {}", userId);
 
         return PostResponseDto.from(savedPost);
 
@@ -54,20 +47,9 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 10)
     public PostResponseDto getPost(Long id, Long writerId) {
-
-        log.info("Beginning to get post by postId: {}, writerId: {}", id, writerId);
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
         Post post = postRepository.findByIdAndUserId(id, writerId)
                 .orElseThrow(() -> new EntityNotFoundException
                         ("해당하는 게시물을 찾을 수 없습니다. postId: " + id + ", writerId: " + writerId));
-
-        stopWatch.stop();
-
-        log.info("Post retrieved successfully by postId: {}, writerId: {}\n Retrieving task execution time: {} ms",
-                id, writerId, stopWatch.getTotalTimeMillis());
 
         return PostResponseDto.from(post);
 
@@ -77,20 +59,10 @@ public class PostServiceImpl implements PostService {
     @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 30)
     public Page<PostResponseDto> getAllUserPosts(Long userId, Pageable pageable) {
 
-        log.info("Beginning to get all posts by userId: {}", userId);
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
         Page<Post> posts = postRepository.findAllByUserId(userId, pageable);
 
         List<PostResponseDto> userResponseDtos = posts.getContent().stream()
                 .map(PostResponseDto::from).collect(Collectors.toList());
-
-        stopWatch.stop();
-
-        log.info("All posts retrieved successfully by userId: {}\n Retrieving task execution time: {} ms",
-                userId, stopWatch.getTotalTimeMillis());
 
         return new PageImpl<>(userResponseDtos, pageable, posts.getTotalElements());
 
@@ -99,20 +71,10 @@ public class PostServiceImpl implements PostService {
     @Override
     public Page<PostResponseDto> getSearchedPosts(String keyword, Pageable pageable) {
 
-        log.info("Beginning to get all searched posts by keyword: {}", keyword);
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
         Page<Post> posts = postRepository.findByContentContainingIgnoreCase(keyword, pageable);
 
         List<PostResponseDto> userResponseDtos = posts.getContent().stream()
                 .map(PostResponseDto::from).collect(Collectors.toList());
-
-        stopWatch.stop();
-
-        log.info("All searched posts retrieved successfully by keyword: {}\n Retrieving task execution time: {} ms",
-                keyword, stopWatch.getTotalTimeMillis());
 
         return new PageImpl<>(userResponseDtos, pageable, posts.getTotalElements());
 
@@ -121,16 +83,11 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(isolation = REPEATABLE_READ, timeout = 15)
     public PostResponseDto updatePost(Long id, Long userId, PostRequestDto postRequestDto) {
-
-        log.info("Beginning to update post by userId: {}, postId: {}", userId, id);
-
         boolean isUserIdExists = postRepository.existsByUserId(userId);
 
         Post post = validateUserIdAndPostId(userId, id);
 
         Post updatedPost = postRepository.save(post.of(postRequestDto.getContent()));
-
-        log.info("Post updated successfully by userId: {}, postId: {}", userId, id);
 
         return PostResponseDto.from(updatedPost);
 
@@ -140,13 +97,9 @@ public class PostServiceImpl implements PostService {
     @Transactional(isolation = REPEATABLE_READ, timeout = 15)
     public void deletePost(Long id, Long userId) {
 
-        log.info("Beginning to delete post by userId: {}, postId: {}", userId, id);
-
         validateUserIdAndPostId(userId, id);
 
         postRepository.deleteById(id);
-
-        log.info("Post deleted successfully by userId: {}, by postId: {}", userId, id);
 
     }
 
