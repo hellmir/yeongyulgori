@@ -13,7 +13,7 @@ public interface PostService {
 
     Page<PostResponseDto> getAllUserPosts(Long userId, Pageable pageable);
 
-    PostResponseDto updatePost(Long id, Long userId, PostRequestDto postUpdateDto);
+    PostResponseDto updatePost(Long id, Long userId, PostRequestDto postRequestDto);
 
     void deletePost(Long id, Long userId);
 
