@@ -14,7 +14,7 @@ public class LoggingInterceptor extends HandlerInterceptorAdapter {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 
-        log.info("Received request for {}", request.getRequestURI());
+        log.info("Received request for '{}'", request.getRequestURI());
 
         return true;
 
@@ -23,7 +23,15 @@ public class LoggingInterceptor extends HandlerInterceptorAdapter {
     @Override
     public void afterCompletion
             (HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        log.info("Completed request for {}", request.getRequestURI());
+
+        log.info("Completed request for {}', status code: {}",
+                request.getRequestURI(), response.getStatus());
+
+        for (String headerName : response.getHeaderNames()) {
+            log.info("Header [{}]: {}", headerName, response.getHeader(headerName));
+
+        }
+
     }
 
 }
