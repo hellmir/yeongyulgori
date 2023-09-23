@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import personal.yeongyulgori.post.domain.image.service.ImageService;
 import personal.yeongyulgori.post.domain.post.model.dto.PostRequestDto;
 import personal.yeongyulgori.post.domain.post.model.dto.PostResponseDto;
 import personal.yeongyulgori.post.domain.post.model.entity.Post;
@@ -14,25 +15,34 @@ import personal.yeongyulgori.post.exception.serious.sub.InconsistentUserExceptio
 import personal.yeongyulgori.post.exception.serious.sub.NonExistentPostException;
 import personal.yeongyulgori.post.exception.serious.sub.UserPostsNotFound;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
-import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
+import static org.springframework.transaction.annotation.Isolation.*;
 
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
+    private final ImageService imageService;
 
+    private final EntityManager entityManager;
 
     @Override
+    @Transactional(isolation = READ_UNCOMMITTED, timeout = 20)
+    public PostResponseDto registerPost(Long userId, PostRequestDto postRequestDto) {
 
+        Post savedPost = postRepository.save
+                (Post.of(userId, postRequestDto));
 
-        Post savedPost = postRepository.save(Post.of(userId, postRegisterDto.getContent()));
+        if (postRequestDto.getImageRequestDtos() != null) {
+            imageService.saveImages(savedPost.getId(), postRequestDto.getImageRequestDtos());
+        }
 
+        entityManager.refresh(savedPost);
 
         return PostResponseDto.from(savedPost);
 
@@ -81,13 +91,21 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional(isolation = REPEATABLE_READ, timeout = 15)
+    @Transactional(isolation = REPEATABLE_READ, timeout = 30)
     public PostResponseDto updatePost(Long id, Long userId, PostRequestDto postRequestDto) {
-        boolean isUserIdExists = postRepository.existsByUserId(userId);
 
         Post post = validateUserIdAndPostId(userId, id);
 
-        Post updatedPost = postRepository.save(post.of(postRequestDto.getContent()));
+        Post updatedPost = postRepository.save(post.updateFrom(postRequestDto));
+
+        if (postRequestDto.getImageRequestDtos() != null) {
+            imageService.updateImages(updatedPost.getId(), postRequestDto.getImageRequestDtos());
+        } else {
+            imageService.deleteAllImages(updatedPost.getId());
+        }
+
+        entityManager.flush();
+        entityManager.refresh(updatedPost);
 
         return PostResponseDto.from(updatedPost);
 
@@ -117,11 +135,7 @@ public class PostServiceImpl implements PostService {
 
         if (!post.getUserId().equals(userId)) {
 
-            boolean isUserIdExists = postRepository.existsByUserId(userId);
-
-            if (!isUserIdExists) {
-                throw new UserPostsNotFound("해당 사용자의 게시물이 존재하지 않습니다. userId: " + userId);
-            }
+            validateUserIdIsExists(userId);
 
             throw new InconsistentUserException
                     ("일치하지 않는 사용자입니다. postId: " + id +
@@ -130,6 +144,16 @@ public class PostServiceImpl implements PostService {
         }
 
         return post;
+
+    }
+
+    private void validateUserIdIsExists(Long userId) {
+
+        boolean isUserIdExists = postRepository.existsByUserId(userId);
+
+        if (!isUserIdExists) {
+            throw new UserPostsNotFound("해당 사용자의 게시물이 존재하지 않습니다. userId: " + userId);
+        }
 
     }
 
