@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import personal.yeongyulgori.post.domain.image.model.dto.ImageRequestDto;
+import personal.yeongyulgori.post.domain.image.model.entity.Image;
 import personal.yeongyulgori.post.domain.post.model.dto.PostRequestDto;
 import personal.yeongyulgori.post.domain.post.model.dto.PostResponseDto;
 import personal.yeongyulgori.post.domain.post.model.entity.Post;
@@ -28,7 +30,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static testutil.TestObjectFactory.createPost;
+import static personal.yeongyulgori.post.domain.image.model.constant.TargetType.POST;
+import static testutil.TestObjectFactory.*;
 
 @ActiveProfiles("test")
 @WebMvcTest(controllers = PostController.class)
@@ -56,15 +59,18 @@ class PostControllerTest {
     void registerPost() throws Exception {
 
         // given
-        Post post = Post.of(1L, "abc");
+        List<ImageRequestDto> imageRequestDtos = createImageRequestDtos(POST);
 
-        PostRequestDto postRequestDto = PostRequestDto.builder()
-                .content("abc")
-                .build();
+        PostRequestDto postRequestDto = createPostRequestDto("abc", imageRequestDtos);
+
+        List<Image> images = createImages(POST);
+
+        Post post = createPostWithoutId(1L, "abc", images);
 
         PostResponseDto postResponseDto = PostResponseDto.from(post);
 
-        when(postService.registerPost(eq(post.getUserId()), any(PostRequestDto.class))).thenReturn(postResponseDto);
+        when(postService.registerPost(eq(post.getUserId()), any(PostRequestDto.class)))
+                .thenReturn(postResponseDto);
 
         // when, then
         mockMvc.perform(post("/posts/v1")
@@ -81,10 +87,9 @@ class PostControllerTest {
     void getPost() throws Exception {
 
         // given
+        List<Image> images = createImages(POST);
 
-        Post post = createPost(1L, 1L, "abc");
-
-        postRepository.save(post);
+        Post post = createPost(1L, 1L, "abc", images);
 
         PostResponseDto postResponseDto = PostResponseDto.from(post);
 
@@ -103,13 +108,13 @@ class PostControllerTest {
     void getAllUserPosts() throws Exception {
 
         // given
-        Post post1 = Post.of(1L, "abc");
+        List<Image> images = createImages(POST);
 
-        Post post2 = Post.of(2L, "abcd");
+        createPost(1L, 1L, "abc", images);
 
-        Post post3 = Post.of(1L, "abcde");
+        createPost(3L, 2L, "abcd", images);
 
-        postRepository.saveAll(List.of(post1, post2, post3));
+        Post post = createPost(4L, 1L, "abcde", images);
 
         Pageable pageable = Pageable.ofSize(10);
 
@@ -117,11 +122,11 @@ class PostControllerTest {
 
         Page<PostResponseDto> userPage = new PageImpl<>(postResponseDtos, pageable, postResponseDtos.size());
 
-        when(postService.getAllUserPosts(post1.getUserId(), pageable)).thenReturn(userPage);
+        when(postService.getAllUserPosts(post.getUserId(), pageable)).thenReturn(userPage);
 
         // when, then
         mockMvc.perform(get("/posts/v1")
-                        .queryParam("userId", post1.getUserId().toString()))
+                        .queryParam("userId", post.getUserId().toString()))
                 .andDo(print())
                 .andExpect(status().isOk());
 
@@ -134,13 +139,13 @@ class PostControllerTest {
         // given
         String keyword = "bc";
 
-        Post post1 = Post.of(1L, "abc");
+        List<Image> images = createImages(POST);
 
-        Post post2 = Post.of(2L, "abcd");
+        createPost(1L, 1L, "abc", images);
 
-        Post post3 = Post.of(3L, "abcde");
+        createPost(3L, 2L, "abcd", images);
 
-        postRepository.saveAll(List.of(post1, post2, post3));
+        createPost(4L, 3L, "abcde", images);
 
         Pageable pageable = Pageable.ofSize(10);
 
@@ -163,7 +168,9 @@ class PostControllerTest {
     void updatePost() throws Exception {
 
         // given
-        Post post = createPost(1L, 1L, "abc");
+        List<Image> images = createImages(POST);
+
+        Post post = createPost(1L, 1L, "abc", images);
 
         PostRequestDto postRequestDto = PostRequestDto.builder()
                 .content("abcd")
@@ -190,7 +197,9 @@ class PostControllerTest {
     void deletePost() throws Exception {
 
         // given
-        Post post = createPost(1L, 1L, "abc");
+        List<Image> images = createImages(POST);
+
+        Post post = createPost(1L, 1L, "abc", images);
 
         // when, then
 
