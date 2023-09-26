@@ -6,11 +6,13 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.CodeSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
 @Component
 @Aspect
+@Order(1)
 public class LoggingAspect {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
@@ -20,7 +22,7 @@ public class LoggingAspect {
 
         String parameterName = ((CodeSignature) joinPoint.getSignature()).getParameterNames()[0];
 
-        log.info("Beginning to '{}.{}' task by {}: '{}'",
+        log.info("Beginning to '{}.{}' task by '{}: {}'",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), parameterName, longValue);
 
@@ -31,10 +33,9 @@ public class LoggingAspect {
 
         stopWatch.stop();
 
-        log.info("'{}.{}' task was executed successfully in '{} ms' by {}: '{}'",
+        log.info("'{}.{}' task was executed successfully by '{}: {}', estimated time: {}ms",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
-                joinPoint.getSignature().getName(), stopWatch.getTotalTimeMillis(),
-                parameterName, longValue);
+                joinPoint.getSignature().getName(), parameterName, longValue, stopWatch.getTotalTimeMillis());
 
         return process;
 
@@ -45,7 +46,7 @@ public class LoggingAspect {
 
         String parameterName = ((CodeSignature) joinPoint.getSignature()).getParameterNames()[0];
 
-        log.info("Beginning to '{}.{}' task by {}: '{}'",
+        log.info("Beginning to '{}.{}' task by '{}: {}'",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), parameterName, stringValue);
 
@@ -56,10 +57,10 @@ public class LoggingAspect {
 
         stopWatch.stop();
 
-        log.info("'{}.{}' task was executed successfully in '{} ms' by {}: '{}'",
+        log.info("'{}.{}' task was executed successfully by '{}: {}', estimated time: {}ms",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
-                joinPoint.getSignature().getName(), stopWatch.getTotalTimeMillis(),
-                parameterName, stringValue);
+                joinPoint.getSignature().getName(),
+                parameterName, stringValue, stopWatch.getTotalTimeMillis());
 
         return process;
 
@@ -70,7 +71,7 @@ public class LoggingAspect {
 
         String parameterName = ((CodeSignature) joinPoint.getSignature()).getParameterNames()[0];
 
-        log.info("Beginning to '{}.{}' task by {}: '{}'",
+        log.info("Beginning to '{}.{}' task by '{}: {}'",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), parameterName, longValue);
 
@@ -81,10 +82,10 @@ public class LoggingAspect {
 
         stopWatch.stop();
 
-        log.info("'{}.{}' task was executed successfully in '{} ms' by {}: '{}'",
+        log.info("'{}.{}' task was executed successfully by '{}: {}', estimated time: {}ms",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
-                joinPoint.getSignature().getName(), stopWatch.getTotalTimeMillis(),
-                parameterName, longValue);
+                joinPoint.getSignature().getName(),
+                parameterName, longValue, stopWatch.getTotalTimeMillis());
 
         return process;
 
