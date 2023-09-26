@@ -1,7 +1,9 @@
-package personal.yeongyulgori.post.web;
+package personal.yeongyulgori.post.interceptor;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,10 +13,17 @@ public class LoggingInterceptor extends HandlerInterceptorAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingInterceptor.class);
 
+    private static final String STOP_WATCH = "stopWatch";
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 
         log.info("Received request for '{}'", request.getRequestURI());
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        request.setAttribute(STOP_WATCH, stopWatch);
 
         return true;
 
@@ -22,10 +31,13 @@ public class LoggingInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public void afterCompletion
-            (HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+            (HttpServletRequest request, HttpServletResponse response, Object handler, Exception e) {
 
-        log.info("Completed request for {}', status code: {}",
-                request.getRequestURI(), response.getStatus());
+        StopWatch stopWatch = (StopWatch) request.getAttribute(STOP_WATCH);
+        stopWatch.stop();
+
+        log.info("Completed request for '{}', status code: {}, estimated time: {}ms",
+                request.getRequestURI(), response.getStatus(), stopWatch.getTotalTimeMillis());
 
         for (String headerName : response.getHeaderNames()) {
             log.info("Header [{}]: {}", headerName, response.getHeader(headerName));
