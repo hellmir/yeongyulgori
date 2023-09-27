@@ -1,6 +1,10 @@
 package personal.yeongyulgori.post.domain.post.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -21,9 +25,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.springframework.transaction.annotation.Isolation.*;
+import static personal.yeongyulgori.post.domain.post.model.constant.CacheKey.KEY_POST;
 
 @Service
 @RequiredArgsConstructor
+@Profile("!test")
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
@@ -33,6 +39,8 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(isolation = READ_UNCOMMITTED, timeout = 20)
+    @CachePut(key = "#result.id", condition = "#userId != null && #postRequestDto != null",
+            unless = "#result == null", value = KEY_POST)
     public PostResponseDto registerPost(Long userId, PostRequestDto postRequestDto) {
 
         Post savedPost = postRepository.save
@@ -56,6 +64,8 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 10)
+    @Cacheable(key = "#id", condition = "#id != null && #writerId != null",
+            unless = "#result == null", value = KEY_POST)
     public PostResponseDto getPost(Long id, Long writerId) {
         Post post = postRepository.findByIdAndUserId(id, writerId)
                 .orElseThrow(() -> new EntityNotFoundException
@@ -79,6 +89,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 10)
     public Page<PostResponseDto> getSearchedPosts(String keyword, Pageable pageable) {
 
         Page<Post> posts = postRepository.findByContentContainingIgnoreCase(keyword, pageable);
@@ -92,6 +103,8 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(isolation = REPEATABLE_READ, timeout = 30)
+    @CachePut(key = "#id", condition = "#id != null && #userId != null && #postRequestDto != null",
+            unless = "#result == null", value = KEY_POST)
     public PostResponseDto updatePost(Long id, Long userId, PostRequestDto postRequestDto) {
 
         Post post = validateUserIdAndPostId(userId, id);
@@ -113,6 +126,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(isolation = REPEATABLE_READ, timeout = 15)
+    @CacheEvict(key = "#id", condition = "#id != null && #userId != null", value = KEY_POST)
     public void deletePost(Long id, Long userId) {
 
         validateUserIdAndPostId(userId, id);
