@@ -81,7 +81,7 @@ public class PostController {
             @ApiImplicitParam(name = "sort.unsorted", value = "정렬 미사용 여부", dataTypeClass = Boolean.class,
                     paramType = "query", defaultValue = "false", example = "false"),
             @ApiImplicitParam(name = "sort", value = "정렬 방식", dataTypeClass = String.class,
-                    paramType = "query", defaultValue = "name,asc", example = "name,asc")
+                    paramType = "query", defaultValue = "content,asc", example = "content,asc")
     })
     @GetMapping()
     public ResponseEntity<Page<PostResponseDto>> getAllUserPosts
@@ -116,7 +116,7 @@ public class PostController {
             @ApiImplicitParam(name = "sort.unsorted", value = "정렬 미사용 여부", dataTypeClass = Boolean.class,
                     paramType = "query", defaultValue = "false", example = "false"),
             @ApiImplicitParam(name = "sort", value = "정렬 방식", dataTypeClass = String.class,
-                    paramType = "query", defaultValue = "name,asc", example = "name,asc")
+                    paramType = "query", defaultValue = "content,asc", example = "content,asc")
     })
     @GetMapping("search")
     public ResponseEntity<Page<PostResponseDto>> getSearchedPosts
