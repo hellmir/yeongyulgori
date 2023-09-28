@@ -1,14 +1,16 @@
 package personal.yeongyulgori.post.domain.post.service;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StopWatch;
+import personal.yeongyulgori.post.domain.image.service.ImageService;
 import personal.yeongyulgori.post.domain.post.model.dto.PostRequestDto;
 import personal.yeongyulgori.post.domain.post.model.dto.PostResponseDto;
 import personal.yeongyulgori.post.domain.post.model.entity.Post;
@@ -17,29 +19,38 @@ import personal.yeongyulgori.post.exception.serious.sub.InconsistentUserExceptio
 import personal.yeongyulgori.post.exception.serious.sub.NonExistentPostException;
 import personal.yeongyulgori.post.exception.serious.sub.UserPostsNotFound;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
-import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
+import static org.springframework.transaction.annotation.Isolation.*;
+import static personal.yeongyulgori.post.domain.post.model.constant.CacheKey.KEY_POST;
 
 @Service
 @RequiredArgsConstructor
+@Profile("!test")
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
+    private final ImageService imageService;
 
-    private static final Logger log = LoggerFactory.getLogger(PostService.class);
+    private final EntityManager entityManager;
 
     @Override
-    public PostResponseDto registerPost(Long userId, PostRequestDto postRegisterDto) {
+    @Transactional(isolation = READ_UNCOMMITTED, timeout = 20)
+    @CachePut(key = "#result.id", condition = "#userId != null && #postRequestDto != null",
+            unless = "#result == null", value = KEY_POST)
+    public PostResponseDto registerPost(Long userId, PostRequestDto postRequestDto) {
 
-        log.info("Beginning to register post by userId: {}", userId);
+        Post savedPost = postRepository.save
+                (Post.of(userId, postRequestDto));
 
-        Post savedPost = postRepository.save(Post.of(userId, postRegisterDto.getContent()));
+        if (postRequestDto.getImageRequestDtos() != null) {
+            imageService.saveImages(savedPost.getId(), postRequestDto.getImageRequestDtos());
+        }
 
-        log.info("Post registered successfully by userId: {}", userId);
+        entityManager.refresh(savedPost);
 
         return PostResponseDto.from(savedPost);
 
@@ -53,21 +64,12 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 10)
+    @Cacheable(key = "#id", condition = "#id != null && #writerId != null",
+            unless = "#result == null", value = KEY_POST)
     public PostResponseDto getPost(Long id, Long writerId) {
-
-        log.info("Beginning to get post by postId: {}, writerId: {}", id, writerId);
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
         Post post = postRepository.findByIdAndUserId(id, writerId)
                 .orElseThrow(() -> new EntityNotFoundException
                         ("해당하는 게시물을 찾을 수 없습니다. postId: " + id + ", writerId: " + writerId));
-
-        stopWatch.stop();
-
-        log.info("Post retrieved successfully by postId: {}, writerId: {}\n Retrieving task execution time: {} ms",
-                id, writerId, stopWatch.getTotalTimeMillis());
 
         return PostResponseDto.from(post);
 
@@ -77,60 +79,46 @@ public class PostServiceImpl implements PostService {
     @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 30)
     public Page<PostResponseDto> getAllUserPosts(Long userId, Pageable pageable) {
 
-        log.info("Beginning to get all posts by userId: {}", userId);
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
         Page<Post> posts = postRepository.findAllByUserId(userId, pageable);
 
         List<PostResponseDto> userResponseDtos = posts.getContent().stream()
                 .map(PostResponseDto::from).collect(Collectors.toList());
-
-        stopWatch.stop();
-
-        log.info("All posts retrieved successfully by userId: {}\n Retrieving task execution time: {} ms",
-                userId, stopWatch.getTotalTimeMillis());
 
         return new PageImpl<>(userResponseDtos, pageable, posts.getTotalElements());
 
     }
 
     @Override
+    @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 10)
     public Page<PostResponseDto> getSearchedPosts(String keyword, Pageable pageable) {
-
-        log.info("Beginning to get all searched posts by keyword: {}", keyword);
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
 
         Page<Post> posts = postRepository.findByContentContainingIgnoreCase(keyword, pageable);
 
         List<PostResponseDto> userResponseDtos = posts.getContent().stream()
                 .map(PostResponseDto::from).collect(Collectors.toList());
 
-        stopWatch.stop();
-
-        log.info("All searched posts retrieved successfully by keyword: {}\n Retrieving task execution time: {} ms",
-                keyword, stopWatch.getTotalTimeMillis());
-
         return new PageImpl<>(userResponseDtos, pageable, posts.getTotalElements());
 
     }
 
     @Override
-    @Transactional(isolation = REPEATABLE_READ, timeout = 15)
+    @Transactional(isolation = REPEATABLE_READ, timeout = 30)
+    @CachePut(key = "#id", condition = "#id != null && #userId != null && #postRequestDto != null",
+            unless = "#result == null", value = KEY_POST)
     public PostResponseDto updatePost(Long id, Long userId, PostRequestDto postRequestDto) {
-
-        log.info("Beginning to update post by userId: {}, postId: {}", userId, id);
-
-        boolean isUserIdExists = postRepository.existsByUserId(userId);
 
         Post post = validateUserIdAndPostId(userId, id);
 
-        Post updatedPost = postRepository.save(post.of(postRequestDto.getContent()));
+        Post updatedPost = postRepository.save(post.updateFrom(postRequestDto));
 
-        log.info("Post updated successfully by userId: {}, postId: {}", userId, id);
+        if (postRequestDto.getImageRequestDtos() != null) {
+            imageService.updateImages(updatedPost.getId(), postRequestDto.getImageRequestDtos());
+        } else {
+            imageService.deleteAllImages(updatedPost.getId());
+        }
+
+        entityManager.flush();
+        entityManager.refresh(updatedPost);
 
         return PostResponseDto.from(updatedPost);
 
@@ -138,15 +126,12 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(isolation = REPEATABLE_READ, timeout = 15)
+    @CacheEvict(key = "#id", condition = "#id != null && #userId != null", value = KEY_POST)
     public void deletePost(Long id, Long userId) {
-
-        log.info("Beginning to delete post by userId: {}, postId: {}", userId, id);
 
         validateUserIdAndPostId(userId, id);
 
         postRepository.deleteById(id);
-
-        log.info("Post deleted successfully by userId: {}, by postId: {}", userId, id);
 
     }
 
@@ -164,11 +149,7 @@ public class PostServiceImpl implements PostService {
 
         if (!post.getUserId().equals(userId)) {
 
-            boolean isUserIdExists = postRepository.existsByUserId(userId);
-
-            if (!isUserIdExists) {
-                throw new UserPostsNotFound("해당 사용자의 게시물이 존재하지 않습니다. userId: " + userId);
-            }
+            validateUserIdIsExists(userId);
 
             throw new InconsistentUserException
                     ("일치하지 않는 사용자입니다. postId: " + id +
@@ -177,6 +158,16 @@ public class PostServiceImpl implements PostService {
         }
 
         return post;
+
+    }
+
+    private void validateUserIdIsExists(Long userId) {
+
+        boolean isUserIdExists = postRepository.existsByUserId(userId);
+
+        if (!isUserIdExists) {
+            throw new UserPostsNotFound("해당 사용자의 게시물이 존재하지 않습니다. userId: " + userId);
+        }
 
     }
 
