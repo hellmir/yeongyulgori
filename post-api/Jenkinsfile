@@ -68,6 +68,7 @@ pipeline {
                         string(credentialsId: 'DB_ROOT_PASSWORD', variable: 'DB_ROOT_PASSWORD'),
                         string(credentialsId: 'DB_USER_NAME', variable: 'DB_USER_NAME'),
                         string(credentialsId: 'DB_USER_PASSWORD', variable: 'DB_USER_PASSWORD')
+                        string(credentialsId: 'REDIS_PASSWORD', variable: 'REDIS_PASSWORD')
                     ]) {
                         sh '''
                         scp -i "$EC2_DEPLOY_KEY" ${PROJECT_NAME}/set-up-docker.sh ubuntu@"$EC2_IP":"$EC2_DEPLOY_PATH"
@@ -85,7 +86,7 @@ pipeline {
                         ssh -i "$EC2_DEPLOY_KEY" ubuntu@"$EC2_IP" "chmod +x ${EC2_DEPLOY_PATH}/set-up-docker.sh && ${EC2_DEPLOY_PATH}/set-up-docker.sh $DB_ROOT_PASSWORD $DB_USER_NAME $DB_USER_PASSWORD"
                         '''
                         sh '''
-                        ssh -i "$EC2_DEPLOY_KEY" ubuntu@"$EC2_IP" "export DOCKER_HUB_USER_NAME='$DOCKER_HUB_USER_NAME'; export DB_USER_NAME='$DB_USER_NAME'; export DB_USER_PASSWORD='$DB_USER_PASSWORD'; export PROJECT_NAME='$PROJECT_NAME'; export PROJECT_VERSION='$PROJECT_VERSION'; ${EC2_DEPLOY_PATH}/deploy.sh"
+                        ssh -i "$EC2_DEPLOY_KEY" ubuntu@"$EC2_IP" "export DOCKER_HUB_USER_NAME='$DOCKER_HUB_USER_NAME'; export DB_USER_NAME='$DB_USER_NAME'; export DB_USER_PASSWORD='$DB_USER_PASSWORD'; export REDIS_PASSWORD='$REDIS_PASSWORD'; export PROJECT_NAME='$PROJECT_NAME'; export PROJECT_VERSION='$PROJECT_VERSION'; ${EC2_DEPLOY_PATH}/deploy.sh"
                         '''
                     }
                 }
