@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static personal.yeongyulgori.post.domain.image.model.constant.TargetType.POST;
-import static testutil.TestObjectFactory.*;
+import static personal.yeongyulgori.post.testutil.TestObjectFactory.*;
 
 @ActiveProfiles("test")
 @WebMvcTest(controllers = PostController.class)
