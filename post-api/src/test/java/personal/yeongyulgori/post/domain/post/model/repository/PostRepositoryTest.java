@@ -23,8 +23,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static personal.yeongyulgori.post.domain.image.model.constant.TargetType.POST;
-import static testutil.TestObjectFactory.createImages;
-import static testutil.TestObjectFactory.createPostWithoutIdAndImages;
+import static personal.yeongyulgori.post.testutil.TestObjectFactory.createImages;
+import static personal.yeongyulgori.post.testutil.TestObjectFactory.createPostWithoutIdAndImages;
 
 @ActiveProfiles("test")
 @Transactional
