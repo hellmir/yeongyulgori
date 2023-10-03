@@ -29,8 +29,8 @@ public class ImageService {
     /**
      * 클라이언트가 삭제한 이미지는 image 테이블에서 제거, 추가한 이미지는 image 테이블에 추가
      *
-     * @param targetId          이미지 데이터 목록이 저장된 게시물, 댓글 또는 답글의 Primary Key
-     * @param imageRequestDtos: 새로 갱신될 이미지 데이터 목록
+     * @param targetId         이미지 데이터 목록이 저장된 게시물, 댓글 또는 답글의 Primary Key
+     * @param imageRequestDtos 새로 갱신될 이미지 데이터 목록
      */
     public void updateImages(Long targetId, List<ImageRequestDto> imageRequestDtos) {
 

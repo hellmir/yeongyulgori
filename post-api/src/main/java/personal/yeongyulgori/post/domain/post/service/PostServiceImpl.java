@@ -29,7 +29,6 @@ import static personal.yeongyulgori.post.domain.post.model.constant.CacheKey.KEY
 
 @Service
 @RequiredArgsConstructor
-@Profile("!test")
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;

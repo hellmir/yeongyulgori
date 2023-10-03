@@ -3,7 +3,7 @@ package personal.yeongyulgori.post.configuration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import personal.yeongyulgori.post.web.LoggingInterceptor;
+import personal.yeongyulgori.post.interceptor.LoggingInterceptor;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
