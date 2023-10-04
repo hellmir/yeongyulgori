@@ -1,4 +1,4 @@
-package testutil;
+package personal.yeongyulgori.post.testutil;
 
 import personal.yeongyulgori.post.domain.image.model.constant.TargetType;
 import personal.yeongyulgori.post.domain.image.model.dto.ImageRequestDto;
