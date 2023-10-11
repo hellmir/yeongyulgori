@@ -26,6 +26,8 @@ docker run -d \
     -e SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/users \
     -e SPRING_DATASOURCE_USERNAME=$DB_USER_NAME \
     -e SPRING_DATASOURCE_PASSWORD=$DB_USER_PASSWORD \
+    -e EC2_IP=$EC2_IP \
+    -e SPRING_REDIS_PASSWORD=$REDIS_PASSWORD \
     $DOCKER_IMAGE_TAG > ${HOME}/log.out 2> ${HOME}/err.out
 echo "4. Starting server complete"
 
