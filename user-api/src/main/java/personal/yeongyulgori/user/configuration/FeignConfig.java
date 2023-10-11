@@ -2,10 +2,12 @@ package personal.yeongyulgori.user.configuration;
 
 import feign.auth.BasicAuthRequestInterceptor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@EnableFeignClients
 public class FeignConfig {
 
     @Qualifier(value = "mailgun")
