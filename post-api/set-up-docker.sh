@@ -38,19 +38,35 @@ MYSQL_ROOT_PASSWORD=$1
 DB_USER_NAME=$2
 DB_USER_PASSWORD=$3
 
-if [ ! "$(docker ps -a | grep mysql-container)" ]; then
+if [ ! "$(docker ps -a | grep post-mysql-container)" ]; then
     echo "Starting MySQL container..."
-    sudo docker run -d --name mysql-container --network=docker-network \
+    sudo docker run -d --name post-mysql-container --network=docker-network \
     -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
     mysql:latest
 
     sleep 30
 
     # create database
-    sudo docker exec mysql-container mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE IF NOT EXISTS users;"
+    sudo docker exec post-mysql-container mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE IF NOT EXISTS users;"
 
     # create user and grant privileges
-    sudo docker exec mysql-container mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS '$DB_USER_NAME'@'%' IDENTIFIED BY '$DB_USER_PASSWORD'; GRANT ALL PRIVILEGES ON users.* TO '$DB_USER_NAME'@'%'; FLUSH PRIVILEGES;"
+    sudo docker exec post-mysql-container mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS '$DB_USER_NAME'@'%' IDENTIFIED BY '$DB_USER_PASSWORD'; GRANT ALL PRIVILEGES ON users.* TO '$DB_USER_NAME'@'%'; FLUSH PRIVILEGES;"
+fi
+
+# pull Redis image if not exists
+if [ ! "$(docker images -q redis:latest)" ]; then
+    echo "Pulling Redis Docker image..."
+    sudo docker pull redis:latest
+fi
+
+# run Redis container if not exists
+REDIS_PASSWORD=$4
+
+if [ ! "$(docker ps -a | grep post-redis-container)" ]; then
+    echo "Starting Redis container..."
+    sudo docker run -d --name post-redis-container --network=docker-network \
+    -e REDIS_PASSWORD=$REDIS_PASSWORD \
+    redis:latest
 fi
 
 echo "Docker setup complete."
