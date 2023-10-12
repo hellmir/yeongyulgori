@@ -53,4 +53,20 @@ if [ ! "$(docker ps -a | grep mysql-container)" ]; then
     sudo docker exec mysql-container mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS '$DB_USER_NAME'@'%' IDENTIFIED BY '$DB_USER_PASSWORD'; GRANT ALL PRIVILEGES ON users.* TO '$DB_USER_NAME'@'%'; FLUSH PRIVILEGES;"
 fi
 
+# pull Redis image if not exists
+if [ ! "$(docker images -q redis:latest)" ]; then
+    echo "Pulling Redis Docker image..."
+    sudo docker pull redis:latest
+fi
+
+# run Redis container if not exists
+REDIS_PASSWORD=$4
+
+if [ ! "$(docker ps -a | grep redis-container)" ]; then
+    echo "Starting Redis container..."
+    sudo docker run -d --name redis-container --network=docker-network \
+    -e REDIS_PASSWORD=$REDIS_PASSWORD \
+    redis:latest
+fi
+
 echo "Docker setup complete."
