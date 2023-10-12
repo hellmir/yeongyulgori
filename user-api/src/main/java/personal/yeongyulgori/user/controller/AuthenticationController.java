@@ -10,12 +10,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.dto.SignInResponseDto;
 import personal.yeongyulgori.user.model.dto.UserResponseDto;
 import personal.yeongyulgori.user.model.form.InformationUpdateForm;
 import personal.yeongyulgori.user.model.form.SignInForm;
 import personal.yeongyulgori.user.model.form.SignUpForm;
+import personal.yeongyulgori.user.security.JwtTokenProvider;
 import personal.yeongyulgori.user.service.AuthenticationService;
-import personal.yeongyulgori.user.service.AutoCompleteService;
 import personal.yeongyulgori.user.validation.group.OnSignIn;
 import personal.yeongyulgori.user.validation.group.OnSignUp;
 
@@ -28,10 +29,10 @@ import java.net.URI;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
-    private final AutoCompleteService autoCompleteService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @ApiOperation(value = "회원 가입", notes = "회원 가입 양식을 입력해 회원 가입을 할 수 있습니다.")
-    @PostMapping("sign-up")
+    @PostMapping("signup")
     public ResponseEntity<UserResponseDto> signUpUser
             (@Validated(OnSignUp.class)
              @RequestBody @ApiParam(value = "회원 가입 양식")
@@ -39,20 +40,20 @@ public class AuthenticationController {
 
         UserResponseDto userResponseDto = authenticationService.signUpUser(signUpForm);
 
-        autoCompleteService.addAutoCompleteKeyWord(userResponseDto.getName());
-
         return buildResponse(userResponseDto);
 
     }
 
     @ApiOperation(value = "로그인", notes = "email 또는 username과 비밀번호를 입력해 로그인을 할 수 있습니다.")
-    @PostMapping("sign-in")
+    @PostMapping("login")
     public ResponseEntity<String> signInUser
             (@Validated(OnSignIn.class)
              @RequestBody @ApiParam(value = "로그인 양식")
              SignInForm signInForm) {
 
-        String token = authenticationService.signInUser(signInForm);
+        SignInResponseDto signInResponseDto = authenticationService.signInUser(signInForm);
+
+        String token = jwtTokenProvider.generateToken(signInResponseDto.getUsername(), signInResponseDto.getRoles());
 
         return ResponseEntity.status(HttpStatus.OK).body(token);
 
@@ -115,10 +116,9 @@ public class AuthenticationController {
     @ApiOperation(value = "비밀번호 재설정", notes = "인증에 성공하면 새로운 비밀번호를 설정할 수 있습니다.")
     @PatchMapping("password-reset")
     public ResponseEntity<Void> resetPassword
-            (@ApiParam(value = "토큰") String token,
-             @ApiParam(value = "비밀번호", example = "1234") String password) {
+            (@ApiParam(value = "비밀번호", example = "1234") String password) {
 
-        authenticationService.resetPassword(token, password);
+        authenticationService.resetPassword(password);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 
