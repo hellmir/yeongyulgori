@@ -3,9 +3,9 @@ package personal.yeongyulgori.user.exception.serious.sub;
 import org.springframework.http.HttpStatus;
 import personal.yeongyulgori.user.exception.serious.AbstractSeriousException;
 
-public class KeywordNotFoundException extends AbstractSeriousException {
+public class AutoCompleteValueNotFoundException extends AbstractSeriousException {
 
-    public KeywordNotFoundException(String message) {
+    public AutoCompleteValueNotFoundException(String message) {
         super(message);
     }
 
