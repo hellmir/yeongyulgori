@@ -1,5 +1,6 @@
 package personal.yeongyulgori.user.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -90,6 +91,21 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.resolve(errorResponse.getStatusCode()));
+
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    private ResponseEntity<ErrorResponse> handleExpiredJwtException
+            (ExpiredJwtException e) {
+
+        log.info("Exception occurred: {}", e.getMessage(), e);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
                 .message(e.getMessage())
                 .build();
 

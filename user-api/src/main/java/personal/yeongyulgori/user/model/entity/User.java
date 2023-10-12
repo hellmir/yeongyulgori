@@ -4,27 +4,27 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import personal.yeongyulgori.user.base.BaseEntity;
-import personal.yeongyulgori.user.constant.Role;
-import personal.yeongyulgori.user.model.Address;
+import personal.yeongyulgori.user.model.constant.Role;
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.entity.embedment.Address;
 import personal.yeongyulgori.user.model.form.InformationUpdateForm;
 import personal.yeongyulgori.user.model.form.SignUpForm;
 
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.Locale;
-import java.util.Optional;
-
-import static javax.persistence.EnumType.STRING;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
-public class User extends BaseEntity {
+public class User extends BaseEntity implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,11 +36,11 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 20)
     private String username;
 
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false, length = 10)
-    private String name;
+    private String fullName;
 
     @Column(nullable = false)
     private LocalDate birthDate;
@@ -54,35 +54,30 @@ public class User extends BaseEntity {
     @Column(columnDefinition = "MEDIUMBLOB")
     private byte[] profileImage;
 
-    @Column(nullable = false)
-    @Enumerated(STRING)
-    private Role role;
-
-    private boolean isVerified;
-    private String verificationCode;
-    private LocalDateTime verificationExpiredAt;
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<Role> roles;
 
     @Builder
-    private User(Long id, String email, String username, String password, String name,
+    private User(Long id, String email, String username, String password, String fullName,
                  LocalDate birthDate, String phoneNumber, Address address, byte[] profileImage,
-                 Role role, LocalDateTime createdAt) {
+                 List<Role> roles, LocalDateTime createdAt) {
 
         this.id = id;
         this.email = email.toLowerCase(Locale.ROOT);
         this.username = username;
         this.password = password;
-        this.name = name;
+        this.fullName = fullName;
         this.birthDate = birthDate;
         this.phoneNumber = phoneNumber;
         this.address = address;
-        this.role = role;
         this.profileImage = profileImage;
+        this.roles = roles;
 
         setCreatedAt(createdAt);
 
     }
 
-    public static User from(SignUpForm signUpForm) {
+    public static User from(SignUpForm signUpForm, String encodedPassword) {
 
         byte[] decodedImage = Optional.ofNullable(signUpForm.getProfileImage())
                 .map(Base64.getDecoder()::decode)
@@ -91,12 +86,12 @@ public class User extends BaseEntity {
         return User.builder()
                 .email(signUpForm.getEmail())
                 .username(signUpForm.getUsername())
-                .password(signUpForm.getPassword())
-                .name(signUpForm.getName())
+                .password(encodedPassword)
+                .fullName(signUpForm.getFullName())
                 .birthDate(signUpForm.getBirthDate())
                 .phoneNumber(signUpForm.getPhoneNumber())
                 .address(signUpForm.getAddress())
-                .role(signUpForm.getRole())
+                .roles(signUpForm.getRoles())
                 .profileImage(decodedImage)
                 .build();
 
@@ -113,7 +108,7 @@ public class User extends BaseEntity {
                 .email(email)
                 .username(Optional.ofNullable(username).orElse(this.username))
                 .password(password)
-                .name(Optional.ofNullable(informationUpdateForm.getName()).orElse(name))
+                .fullName(Optional.ofNullable(informationUpdateForm.getFullName()).orElse(fullName))
                 .birthDate(birthDate)
                 .phoneNumber(phoneNumber)
                 .address(Optional.ofNullable(informationUpdateForm.getAddress()).isPresent()
@@ -129,7 +124,7 @@ public class User extends BaseEntity {
                                 .orElse(address.getDetailedAddress()))
                         .build()
                         : address)
-                .role(Optional.ofNullable(informationUpdateForm.getRole()).orElse(role))
+                .roles(Optional.ofNullable(informationUpdateForm.getRoles()).orElse(roles))
                 .profileImage(Optional.ofNullable(decodedImage).orElse(profileImage))
                 .createdAt(getCreatedAt())
                 .build();
@@ -143,15 +138,40 @@ public class User extends BaseEntity {
                 .email(Optional.ofNullable(crucialInformationUpdateDto.getEmail()).orElse(email))
                 .username(username)
                 .password(Optional.ofNullable(crucialInformationUpdateDto.getPassword()).orElse(password))
-                .name(name)
+                .fullName(fullName)
                 .birthDate(birthDate)
                 .phoneNumber(Optional.ofNullable(crucialInformationUpdateDto.getPhoneNumber()).orElse(phoneNumber))
                 .address(address)
-                .role(role)
+                .roles(roles)
                 .profileImage(profileImage)
                 .createdAt(getCreatedAt())
                 .build();
 
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream().map(role -> new SimpleGrantedAuthority(role.name())).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
 }
