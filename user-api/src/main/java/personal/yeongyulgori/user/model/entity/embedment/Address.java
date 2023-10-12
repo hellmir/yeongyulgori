@@ -1,4 +1,4 @@
-package personal.yeongyulgori.user.model;
+package personal.yeongyulgori.user.model.entity.embedment;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
