@@ -1,6 +1,5 @@
 package personal.yeongyulgori.user.service;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -8,31 +7,37 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import personal.yeongyulgori.user.constant.Role;
+import org.springframework.transaction.annotation.Transactional;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
 import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException;
 import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
-import personal.yeongyulgori.user.model.Address;
+import personal.yeongyulgori.user.model.constant.Role;
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.dto.SignInResponseDto;
 import personal.yeongyulgori.user.model.dto.UserResponseDto;
 import personal.yeongyulgori.user.model.entity.User;
+import personal.yeongyulgori.user.model.entity.embedment.Address;
 import personal.yeongyulgori.user.model.form.InformationUpdateForm;
 import personal.yeongyulgori.user.model.form.SignInForm;
 import personal.yeongyulgori.user.model.form.SignUpForm;
 import personal.yeongyulgori.user.model.repository.UserRepository;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static personal.yeongyulgori.user.constant.Role.BUSINESS_USER;
-import static personal.yeongyulgori.user.constant.Role.GENERAL_USER;
+import static personal.yeongyulgori.user.model.constant.Role.*;
+import static personal.yeongyulgori.user.testutil.TestConstant.*;
 import static personal.yeongyulgori.user.testutil.TestObjectFactory.*;
 
 @ActiveProfiles("test")
 @SpringBootTest
+@Transactional
 class AuthenticationServiceTest {
 
     @Autowired
@@ -41,24 +46,25 @@ class AuthenticationServiceTest {
     @Autowired
     private UserRepository userRepository;
 
-    @AfterEach
-    void tearDown() {
-        userRepository.deleteAllInBatch();
-    }
+    @Autowired
+    private AutoCompleteService autoCompleteService;
 
-    @DisplayName("올바른 SignUp 양식을 전송하면 회원 가입을 할 수 있다.")
+    @Autowired
+    private EntityManager entityManager;
+
+    @DisplayName("올바른 회원 가입 양식을 전송하면 회원 가입을 할 수 있다.")
     @ParameterizedTest
     @CsvSource({
-            "abcd@abc.com, person1, 1234, 홍길동, 2000-01-01, 01012345678, GENERAL_USER",
-            "abcd@abcd.com, person2, 12345, 고길동, 2000-02-02, 01012345679, BUSINESS_USER",
-            "abcd@abcde.com, person3, 123456, 김길동, 2000-03-03, 01012345680, GENERAL_USER"
+            "abcd@abc.com, person1, 1234, 홍길동, 2000-01-01, 01012345678, ROLE_GENERAL_USER",
+            "abcd@abcd.com, person2, 12345, 고길동, 2000-02-02, 01012345679, ROLE_BUSINESS_USER",
+            "abcd@abcde.com, person3, 123456, 김길동, 2000-03-03, 01012345680, ROLE_ADMIN"
     })
-    void signUpUser(String email, String username, String password, String name,
+    void signUpUser(String email, String username, String password, String fullName,
                     LocalDate birthDate, String phoneNumber, Role role) {
 
         // given
         SignUpForm signUpForm = enterUserForm
-                (email, username, password, name, birthDate, phoneNumber, role);
+                (email, username, password, fullName, birthDate, phoneNumber, List.of(role));
 
         // when
         UserResponseDto userResponseDto = authenticationService.signUpUser(signUpForm);
@@ -66,7 +72,32 @@ class AuthenticationServiceTest {
         // then
         assertThat(userResponseDto.getEmail()).isEqualTo(email);
         assertThat(userResponseDto.getUsername()).isEqualTo(username);
-        assertThat(userResponseDto.getRole()).isEqualTo(role);
+        assertThat(userResponseDto.getRoles().get(0)).isEqualTo(role);
+
+    }
+
+    @DisplayName("올바른 회원 가입 양식을 전송하면 여러 권한을 가진 회원으로 가입할 수 있다.")
+    @ParameterizedTest
+    @CsvSource({
+            "abcd@abc.com, person1, 1234, 홍길동, 2000-01-01, 01012345678, ROLE_GENERAL_USER, ROLE_BUSINESS_USER",
+            "abcd@abcd.com, person2, 12345, 고길동, 2000-02-02, 01012345679, ROLE_BUSINESS_USER, ROLE_GENERAL_USER",
+            "abcd@abcde.com, person3, 123456, 김길동, 2000-03-03, 01012345680, ROLE_GENERAL_USER, ROLE_ADMIN"
+    })
+    void signUpUserWithMultipleRoles(String email, String username, String password, String fullName,
+                                     LocalDate birthDate, String phoneNumber, Role role1, Role role2) {
+
+        // given
+        SignUpForm signUpForm = enterUserForm
+                (email, username, password, fullName, birthDate, phoneNumber, List.of(role1, role2));
+
+        // when
+        UserResponseDto userResponseDto = authenticationService.signUpUser(signUpForm);
+
+        // then
+        assertThat(userResponseDto.getEmail()).isEqualTo(email);
+        assertThat(userResponseDto.getUsername()).isEqualTo(username);
+        assertThat(userResponseDto.getRoles().get(0)).isEqualTo(role1);
+        assertThat(userResponseDto.getRoles().get(1)).isEqualTo(role2);
 
     }
 
@@ -76,20 +107,20 @@ class AuthenticationServiceTest {
 
         // given
 
-        SignUpForm signUpForm1 = enterUserForm("abcd@abc.com", "person1",
-                "1234", "홍길동", LocalDate.of(2000, 1, 1),
-                "01012345678", Role.GENERAL_USER);
+        SignUpForm signUpForm1 = enterUserForm(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
         authenticationService.signUpUser(signUpForm1);
 
-        SignUpForm signUpForm2 = enterUserForm("abcd@abc.com", "person2",
-                "12345", "고길동", LocalDate.of(2000, 2, 2),
-                "01012345679", BUSINESS_USER);
+        SignUpForm signUpForm2 = enterUserForm(EMAIL1, USERNAME2,
+                PASSWORD2, FULL_NAME2, BIRTH_DATE2,
+                PHONE_NUMBER2, List.of(ROLE_BUSINESS_USER));
 
         // when, then
         assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
                 .isInstanceOf(DuplicateUserException.class)
-                .hasMessage("이미 가입된 회원입니다. email: " + signUpForm2.getEmail());
+                .hasMessage("이미 가입된 이메일입니다. email: " + signUpForm2.getEmail());
 
     }
 
@@ -99,20 +130,20 @@ class AuthenticationServiceTest {
 
         // given
 
-        SignUpForm signUpForm1 = enterUserForm("abcd@abc.com", "person1",
-                "1234", "홍길동", LocalDate.of(2000, 1, 1),
-                "01012345678", Role.GENERAL_USER);
+        SignUpForm signUpForm1 = enterUserForm(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
         authenticationService.signUpUser(signUpForm1);
 
-        SignUpForm signUpForm2 = enterUserForm("abcd@abcd.com", "person2",
-                "12345", "고길동", LocalDate.of(2000, 2, 2),
-                "01012345678", BUSINESS_USER);
+        SignUpForm signUpForm2 = enterUserForm(EMAIL2, USERNAME2,
+                PASSWORD2, "고길동", BIRTH_DATE2,
+                PHONE_NUMBER1, List.of(ROLE_BUSINESS_USER));
 
         // when, then
         assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
                 .isInstanceOf(DuplicateUserException.class)
-                .hasMessage("이미 가입된 회원입니다. phoneNumber: " + signUpForm2.getPhoneNumber());
+                .hasMessage("이미 가입된 전화번호입니다. phoneNumber: " + signUpForm2.getPhoneNumber());
 
     }
 
@@ -122,15 +153,15 @@ class AuthenticationServiceTest {
 
         // given
 
-        SignUpForm signUpForm1 = enterUserForm("abcd@abc.com", "person1",
-                "1234", "홍길동", LocalDate.of(2000, 1, 1),
-                "01012345678", Role.GENERAL_USER);
+        SignUpForm signUpForm1 = enterUserForm(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
         authenticationService.signUpUser(signUpForm1);
 
-        SignUpForm signUpForm2 = enterUserForm("abcd@abcd.com", "person1",
-                "12345", "고길동", LocalDate.of(2000, 2, 2),
-                "01012345679", BUSINESS_USER);
+        SignUpForm signUpForm2 = enterUserForm(EMAIL2, USERNAME1,
+                PASSWORD2, FULL_NAME2, BIRTH_DATE2,
+                PHONE_NUMBER2, List.of(ROLE_BUSINESS_USER));
 
         // when, then
         assertThatThrownBy(() -> authenticationService.signUpUser(signUpForm2))
@@ -139,34 +170,85 @@ class AuthenticationServiceTest {
 
     }
 
-    // TODO
-    @DisplayName("올바른 SignIn 양식을 전송하면 로그인을 할 수 있다.")
+    @DisplayName("가입된 이메일 주소 또는 사용자 이름과 올바른 비밀번호를 전송하면 로그인을 할 수 있다.")
     @Test
     void signInUser() {
 
         // given
-        SignInForm signInForm = new SignInForm("abcd@abc.com", "person1", "1234");
+        SignUpForm signUpForm = enterUserForm(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        authenticationService.signUpUser(signUpForm);
+
+        SignInForm signInForm1 = new SignInForm(EMAIL1, PASSWORD1);
+        SignInForm signInForm2 = new SignInForm(USERNAME1, PASSWORD1);
 
         // when
-        String token = authenticationService.signInUser(signInForm);
+        SignInResponseDto signInResponseDto1 = authenticationService.signInUser(signInForm1);
+        SignInResponseDto signInResponseDto2 = authenticationService.signInUser(signInForm2);
 
         // then
-        assertThat(token).isNull();
+        assertThat(signInResponseDto1.getUsername()).isEqualTo(USERNAME1);
+        assertThat(signInResponseDto2.getUsername()).isEqualTo(USERNAME1);
+
+    }
+
+    @DisplayName("존재하지 않는 이메일이나 사용자 이름으로 로그인하려 하면 EntityNotFoundException이 발생한다.")
+    @Test
+    void signInUserWithNonExistentEmailOrUsername() {
+
+        // given
+        SignUpForm signUpForm = enterUserForm(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        authenticationService.signUpUser(signUpForm);
+
+        SignInForm signInForm1 = new SignInForm(EMAIL2, PASSWORD1);
+        SignInForm signInForm2 = new SignInForm(USERNAME2, PASSWORD1);
+
+        // when, then
+        assertThatThrownBy(() -> authenticationService.signInUser(signInForm1))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("해당 회원이 존재하지 않습니다. email: " + signInForm1.getEmailOrUsername());
+
+        assertThatThrownBy(() -> authenticationService.signInUser(signInForm2))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("해당 회원이 존재하지 않습니다. username: " + signInForm2.getEmailOrUsername());
+
+    }
+
+    @DisplayName("")
+    @Test
+    void signInUseWithWrongPassword() {
+
+        // given
+        SignUpForm signUpForm = enterUserForm(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        authenticationService.signUpUser(signUpForm);
+
+        SignInForm signInForm1 = new SignInForm(EMAIL1, PASSWORD1);
+        SignInForm signInForm2 = new SignInForm(USERNAME1, PASSWORD1);
+
+        // when, then
 
     }
 
     @DisplayName("사용자 이름을 통해 회원 개인 정보를 조회할 수 있다.")
     @ParameterizedTest
     @CsvSource({
-            "abcd@abc.com, person1, 1234, 홍길동, 2000-01-01, 01012345678, GENERAL_USER",
-            "abcd@abcd.com, person2, 12345, 고길동, 2000-02-02, 01012345679, BUSINESS_USER",
-            "abcd@abcde.com, person3, 123456, 김길동, 2000-03-03, 01012345680, GENERAL_USER"
+            "abcd@abc.com, person1, 1234, 홍길동, 2000-01-01, 01012345678, ROLE_GENERAL_USER",
+            "abcd@abcd.com, person2, 12345, 고길동, 2000-02-02, 01012345679, ROLE_BUSINESS_USER",
+            "abcd@abcde.com, person3, 123456, 김길동, 2000-03-03, 01012345680, ROLE_GENERAL_USER"
     })
-    void getUserDetails(String email, String username, String password, String name,
+    void getUserDetails(String email, String username, String password, String fullName,
                         LocalDate birthDate, String phoneNumber, Role role) {
 
         // given
-        User user = createUser(email, username, password, name, birthDate, phoneNumber, role);
+        User user = createUser(email, username, password, fullName, birthDate, phoneNumber, List.of(role));
 
         userRepository.save(user);
 
@@ -177,7 +259,7 @@ class AuthenticationServiceTest {
         assertThat(userResponseDto.getEmail()).isEqualTo(email);
         assertThat(userResponseDto.getUsername()).isEqualTo(username);
         assertThat(userResponseDto.getPhoneNumber()).isEqualTo(phoneNumber);
-        assertThat(userResponseDto.getRole()).isEqualTo(role);
+        assertThat(userResponseDto.getRoles()).isEqualTo(user.getRoles());
 
     }
 
@@ -186,15 +268,15 @@ class AuthenticationServiceTest {
     void getUserDetailsByWrongUsername() {
 
         // given
-        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
         userRepository.save(user);
 
         // when, then
-        assertThatThrownBy(() -> authenticationService.getUserDetails("person2"))
+        assertThatThrownBy(() -> authenticationService.getUserDetails(USERNAME2))
                 .isInstanceOf(NonExistentUserException.class)
-                .hasMessage("해당 회원이 존재하지 않습니다. username: person2");
+                .hasMessage("해당 회원이 존재하지 않습니다. username: " + USERNAME2);
 
     }
 
@@ -203,66 +285,66 @@ class AuthenticationServiceTest {
     void updateUserInformation() {
 
         // given
-        User user1 = createUserWithAddress("abcd@abc.com", "person1",
-                "1234", "홍길동", LocalDate.of(2000, 1, 1),
-                "01012345678", Role.GENERAL_USER);
-        User user2 = createUserWithAddress("abcd@abcd.com", "person2",
-                "12345", "고길동", LocalDate.of(2000, 2, 2),
-                "01012345679", BUSINESS_USER);
-        User user3 = createUserWithAddress("abcd@abcde.com", "person3",
-                "123456", "길동", LocalDate.of(2000, 3, 3),
-                "01012345670", Role.GENERAL_USER);
+        User user1 = createUserWithAddress(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, new ArrayList<>(List.of(ROLE_GENERAL_USER)));
+        User user2 = createUserWithAddress(EMAIL2, USERNAME2,
+                PASSWORD2, FULL_NAME2, BIRTH_DATE2,
+                PHONE_NUMBER2, new ArrayList<>(List.of(ROLE_BUSINESS_USER)));
+        User user3 = createUserWithAddress(EMAIL3, USERNAME3,
+                PASSWORD3, "길동", BIRTH_DATE3,
+                PHONE_NUMBER3, new ArrayList<>(List.of(ROLE_GENERAL_USER)));
 
         userRepository.saveAll(List.of(user1, user2, user3));
 
         InformationUpdateForm informationUpdateForm1 = InformationUpdateForm.builder()
                 .id(user1.getId())
-                .name("김길동")
+                .fullName(FULL_NAME3)
                 .build();
 
         InformationUpdateForm informationUpdateForm2 = InformationUpdateForm.builder()
                 .id(user2.getId())
                 .address(Address.builder()
-                        .city("서울")
+                        .city(CITY)
                         .build())
-                .role(GENERAL_USER)
+                .roles(List.of(ROLE_GENERAL_USER))
                 .build();
 
         InformationUpdateForm informationUpdateForm3 = InformationUpdateForm.builder()
                 .id(user3.getId())
-                .name("이길동")
+                .fullName(FULL_NAME4)
                 .address(Address.builder()
-                        .street("테헤란로 231")
-                        .zipcode("12345")
+                        .street(STREET)
+                        .zipcode(PASSWORD2)
                         .build())
                 .profileImage(TEST_IMAGE)
-                .role(BUSINESS_USER)
+                .roles(List.of(ROLE_BUSINESS_USER))
                 .build();
 
         // when
         UserResponseDto userResponseDto1 = authenticationService
-                .updateUserInformation("person0", informationUpdateForm1);
+                .updateUserInformation(USERNAME4, informationUpdateForm1);
         UserResponseDto userResponseDto2 = authenticationService
                 .updateUserInformation(user2.getUsername(), informationUpdateForm2);
         UserResponseDto userResponseDto3 = authenticationService
-                .updateUserInformation("person4", informationUpdateForm3);
+                .updateUserInformation(USERNAME5, informationUpdateForm3);
 
         // then
-        assertThat(userResponseDto1.getUsername()).isEqualTo("person0");
-        assertThat(userResponseDto1.getName()).isEqualTo("김길동");
-        assertThat(userResponseDto1.getPhoneNumber()).isEqualTo("01012345678");
-        assertThat(userResponseDto1.getRole()).isEqualTo(GENERAL_USER);
+        assertThat(userResponseDto1.getUsername()).isEqualTo(USERNAME4);
+        assertThat(userResponseDto1.getFullName()).isEqualTo(FULL_NAME3);
+        assertThat(userResponseDto1.getPhoneNumber()).isEqualTo(PHONE_NUMBER1);
+        assertThat(userResponseDto1.getRoles()).isEqualTo(user1.getRoles());
 
-        assertThat(userResponseDto2.getUsername()).isEqualTo("person2");
-        assertThat(userResponseDto2.getName()).isEqualTo("고길동");
-        assertThat(userResponseDto2.getAddress().getCity()).isEqualTo("서울");
-        assertThat(userResponseDto2.getRole()).isEqualTo(GENERAL_USER);
+        assertThat(userResponseDto2.getUsername()).isEqualTo(USERNAME2);
+        assertThat(userResponseDto2.getFullName()).isEqualTo(FULL_NAME2);
+        assertThat(userResponseDto2.getAddress().getCity()).isEqualTo(CITY);
+        assertThat(userResponseDto2.getRoles()).isEqualTo(user2.getRoles());
 
-        assertThat(userResponseDto3.getUsername()).isEqualTo("person4");
-        assertThat(userResponseDto3.getName()).isEqualTo("이길동");
-        assertThat(userResponseDto3.getAddress().getStreet()).isEqualTo("테헤란로 231");
-        assertThat(userResponseDto3.getAddress().getZipcode()).isEqualTo("12345");
-        assertThat(userResponseDto3.getRole()).isEqualTo(BUSINESS_USER);
+        assertThat(userResponseDto3.getUsername()).isEqualTo(USERNAME5);
+        assertThat(userResponseDto3.getFullName()).isEqualTo(FULL_NAME4);
+        assertThat(userResponseDto3.getAddress().getStreet()).isEqualTo(STREET);
+        assertThat(userResponseDto3.getAddress().getZipcode()).isEqualTo(PASSWORD2);
+        assertThat(userResponseDto3.getRoles()).isEqualTo(user3.getRoles());
 
     }
 
@@ -271,8 +353,8 @@ class AuthenticationServiceTest {
     void updateUserInformationByWrongUserId() {
 
         // given
-        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
         userRepository.save(user);
 
@@ -293,32 +375,34 @@ class AuthenticationServiceTest {
     void updateCrucialUserInformation() {
 
         // given
-        User user1 = createUser("abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
-        User user2 = createUser("abcd@abcd.com", "person2", "12345", "고길동",
-                LocalDate.of(2000, 2, 2), "01012345679", BUSINESS_USER);
-        User user3 = createUser("abcd@abcde.com", "person3", "123456", "길동",
-                LocalDate.of(2000, 3, 3), "01012345670", Role.GENERAL_USER);
+        User user1 = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1,
+                PHONE_NUMBER1, new ArrayList<>(List.of(ROLE_GENERAL_USER)));
+        User user2 = createUser(EMAIL2, USERNAME2, PASSWORD2, FULL_NAME2,
+                BIRTH_DATE2,
+                PHONE_NUMBER2, new ArrayList<>(List.of(ROLE_BUSINESS_USER)));
+        User user3 = createUser(EMAIL3, USERNAME3, PASSWORD3, FULL_NAME3,
+                BIRTH_DATE3,
+                PHONE_NUMBER3, new ArrayList<>(List.of(ROLE_ADMIN)));
 
         userRepository.saveAll(List.of(user1, user2, user3));
 
         CrucialInformationUpdateDto crucialInformationUpdateDto1 = CrucialInformationUpdateDto.builder()
                 .id(user1.getId())
-                .email("abcd@abcdef.com")
+                .email(EMAIL4)
                 .build();
 
         CrucialInformationUpdateDto crucialInformationUpdateDto2 = CrucialInformationUpdateDto.builder()
                 .id(user2.getId())
-                .password("123456")
+                .password(PASSWORD3)
                 .build();
 
         CrucialInformationUpdateDto crucialInformationUpdateDto3 = CrucialInformationUpdateDto.builder()
                 .id(user3.getId())
-                .phoneNumber("01012345671")
+                .phoneNumber(PHONE_NUMBER4)
                 .build();
 
         // when
-
         authenticationService.updateCrucialUserInformation(user1.getUsername(), crucialInformationUpdateDto1);
         authenticationService.updateCrucialUserInformation(user2.getUsername(), crucialInformationUpdateDto2);
         authenticationService.updateCrucialUserInformation(user3.getUsername(), crucialInformationUpdateDto3);
@@ -328,17 +412,17 @@ class AuthenticationServiceTest {
         User savedUser3 = userRepository.findById(user3.getId()).get();
 
         // then
-        assertThat(savedUser1.getEmail()).isEqualTo("abcd@abcdef.com");
-        assertThat(savedUser1.getPassword()).isEqualTo("1234");
-        assertThat(savedUser1.getPhoneNumber()).isEqualTo("01012345678");
+        assertThat(savedUser1.getEmail()).isEqualTo(EMAIL4);
+        assertThat(savedUser1.getPassword()).isEqualTo(PASSWORD1);
+        assertThat(savedUser1.getPhoneNumber()).isEqualTo(PHONE_NUMBER1);
 
-        assertThat(savedUser2.getEmail()).isEqualTo("abcd@abcd.com");
-        assertThat(savedUser2.getPassword()).isEqualTo("123456");
-        assertThat(savedUser2.getPhoneNumber()).isEqualTo("01012345679");
+        assertThat(savedUser2.getEmail()).isEqualTo(EMAIL2);
+        assertThat(savedUser2.getPassword()).isEqualTo(PASSWORD3);
+        assertThat(savedUser2.getPhoneNumber()).isEqualTo(PHONE_NUMBER2);
 
-        assertThat(savedUser3.getEmail()).isEqualTo("abcd@abcde.com");
-        assertThat(savedUser3.getPassword()).isEqualTo("123456");
-        assertThat(savedUser3.getPhoneNumber()).isEqualTo("01012345671");
+        assertThat(savedUser3.getEmail()).isEqualTo(EMAIL3);
+        assertThat(savedUser3.getPassword()).isEqualTo(PASSWORD3);
+        assertThat(savedUser3.getPhoneNumber()).isEqualTo(PHONE_NUMBER4);
 
     }
 
@@ -347,8 +431,8 @@ class AuthenticationServiceTest {
     void updateCrucialUserInformationByWrongUserId() {
 
         // given
-        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
         userRepository.save(user);
 
@@ -368,17 +452,17 @@ class AuthenticationServiceTest {
     @DisplayName("비밀번호 인증을 통해 회원을 탈퇴할 수 있다.")
     @ParameterizedTest
     @CsvSource({
-            "abcd@abc.com, person1, 1234, 홍길동, 2000-01-01, 01012345678, GENERAL_USER",
-            "abcd@abcd.com, person2, 12345, 고길동, 2000-02-02, 01012345679, BUSINESS_USER",
-            "abcd@abcde.com, person3, 123456, 김길동, 2000-03-03, 01012345680, GENERAL_USER"
+            "abcd@abc.com, person1, 1234, 홍길동, 2000-01-01, 01012345678, ROLE_GENERAL_USER",
+            "abcd@abcd.com, person2, 12345, 고길동, 2000-02-02, 01012345679, ROLE_BUSINESS_USER",
+            "abcd@abcde.com, person3, 123456, 김길동, 2000-03-03, 01012345680, ROLE_GENERAL_USER"
     })
     void deleteUser(
             String email, String username, String password,
-            String name, LocalDate birthDate, String phoneNumber, Role role
+            String fullName, LocalDate birthDate, String phoneNumber, Role role
     ) {
 
         // given
-        User user = createUser(email, username, password, name, birthDate, phoneNumber, role);
+        User user = createUser(email, username, password, fullName, birthDate, phoneNumber, List.of(role));
 
         userRepository.save(user);
 
@@ -395,16 +479,16 @@ class AuthenticationServiceTest {
     void deleteUserByWrongUsername() {
 
         // given
-        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
         userRepository.save(user);
 
         // when, then
         assertThatThrownBy(() -> authenticationService
-                .deleteUser("person2", "1234"))
+                .deleteUser(USERNAME2, PASSWORD1))
                 .isInstanceOf(NonExistentUserException.class)
-                .hasMessage("해당 회원이 존재하지 않습니다. username: person2");
+                .hasMessage("해당 회원이 존재하지 않습니다. username: " + USERNAME2);
 
     }
 
@@ -413,14 +497,14 @@ class AuthenticationServiceTest {
     void deleteUserByWrongPassword() {
 
         // given
-        User user = createUser("abcd@abc.com", "person1", "1234", "홍길동",
-                LocalDate.of(2000, 1, 1), "01012345678", Role.GENERAL_USER);
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
         userRepository.save(user);
 
         // when, then
         assertThatThrownBy(() -> authenticationService
-                .deleteUser("person1", "12345"))
+                .deleteUser(USERNAME1, PASSWORD2))
                 .isInstanceOf(IncorrectPasswordException.class)
                 .hasMessage("비밀번호가 일치하지 않습니다.");
 
