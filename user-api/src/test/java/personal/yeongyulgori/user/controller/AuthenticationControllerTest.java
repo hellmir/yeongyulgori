@@ -273,7 +273,7 @@ class AuthenticationControllerTest {
                         .param("email", user.getEmail())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
     }
 
