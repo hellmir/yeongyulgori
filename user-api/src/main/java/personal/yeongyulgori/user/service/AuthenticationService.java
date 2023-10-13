@@ -20,9 +20,9 @@ public interface AuthenticationService {
 
     void updateCrucialUserInformation(String username, CrucialInformationUpdateDto crucialInformationUpdateDto);
 
-    void requestPasswordReset(String email);
+    String requestPasswordReset(String email, String token);
 
-    void resetPassword(String password);
+    void resetPassword(String token, PasswordRequestDto passwordRequestDto);
 
     void deleteUser(String username, PasswordRequestDto passwordRequestDto);
 
