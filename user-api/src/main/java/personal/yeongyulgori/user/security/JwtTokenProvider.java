@@ -8,23 +8,27 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import personal.yeongyulgori.user.model.constant.Role;
 
 import javax.annotation.PostConstruct;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
     private static final String KEY_ROLES = "roles";
-    private static final long TOKEN_EXPIRATION_TIME = 1000 * 60 * 60 * 2;
+    private static final long LOGIN_TOKEN_EXPIRATION_TIME = 1000 * 60 * 60 * 2;
+
+    private static final String TOKEN_TYPE = "token-type";
+    private static final String PASSWORD_RESET = "password-reset";
+    public static final long PASSWORD_RESET_TOKEN_EXPIRATION_TIME = 1000 * 60 * 30;
     private final UserDetailsService userDetailsService;
 
     @Value("${spring.jwt.secret}")
@@ -35,18 +39,35 @@ public class JwtTokenProvider {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
-    public String generateToken(String username, Collection<? extends GrantedAuthority> roles) {
+    public String generateToken(String username, List<Role> roles) {
 
         Claims claims = Jwts.claims().setSubject(username);
         claims.put(KEY_ROLES, roles);
 
         Date now = new Date();
-        Date expirationTime = new Date(now.getTime() + TOKEN_EXPIRATION_TIME);
+        Date expirationDate = new Date(now.getTime() + LOGIN_TOKEN_EXPIRATION_TIME);
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(expirationTime)
+                .setExpiration(expirationDate)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
+
+    }
+
+    public String generateToken(String email) {
+
+        Claims claims = Jwts.claims().setSubject(email);
+        claims.put(TOKEN_TYPE, PASSWORD_RESET);
+
+        Date now = new Date();
+        Date expirationDate = new Date(now.getTime() + PASSWORD_RESET_TOKEN_EXPIRATION_TIME);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(expirationDate)
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
 

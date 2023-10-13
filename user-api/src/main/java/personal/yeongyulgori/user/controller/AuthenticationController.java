@@ -103,16 +103,15 @@ public class AuthenticationController {
 
     }
 
-
     @ApiOperation(value = "비밀번호 재설정 요청", notes = "비밀번호를 잊어 버린 경우 인증을 통해 재설정을 요청할 수 있습니다.")
     @PostMapping("password-reset/request")
-    public ResponseEntity<Void> requestPasswordReset
+    public ResponseEntity<String> requestPasswordReset
             (@ApiParam(value = "이메일 주소", example = "abcd@abc.com") @RequestParam String email) {
 
         String token = jwtTokenProvider.generateToken(email);
-        authenticationService.requestPasswordReset(email, token);
+        String passwordResetUrl = authenticationService.requestPasswordReset(email, token);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.status(HttpStatus.OK).body(passwordResetUrl);
 
     }
 

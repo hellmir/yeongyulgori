@@ -2,6 +2,7 @@ package personal.yeongyulgori.user.service.impl;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,19 +13,23 @@ import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
 import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException;
 import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
+import personal.yeongyulgori.user.exception.significant.sub.TokenExpiredException;
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.model.dto.PasswordRequestDto;
 import personal.yeongyulgori.user.model.dto.SignInResponseDto;
 import personal.yeongyulgori.user.model.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.entity.PasswordResetToken;
 import personal.yeongyulgori.user.model.entity.User;
 import personal.yeongyulgori.user.model.form.InformationUpdateForm;
 import personal.yeongyulgori.user.model.form.SignInForm;
 import personal.yeongyulgori.user.model.form.SignUpForm;
+import personal.yeongyulgori.user.model.repository.PasswordResetTokenRepository;
 import personal.yeongyulgori.user.model.repository.UserRepository;
 import personal.yeongyulgori.user.service.AuthenticationService;
 import personal.yeongyulgori.user.service.AutoCompleteService;
 
 import javax.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
 
 import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
 import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
@@ -39,6 +44,13 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     private final AutoCompleteService autoCompleteService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Value("${spring.redis.host}")
+    private String ec2Ip;
+
+    @Value(("${server.port}"))
+    private String serverPort;
 
     @Override
     public UserDetails loadUserByUsername(String emailOrUsername) throws UsernameNotFoundException {
@@ -66,9 +78,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
         User signedUpUser = validateUserExists(signInForm.getEmailOrUsername());
 
-        if (!passwordEncoder.matches(signInForm.getPassword(), signedUpUser.getPassword())) {
-            throw new IncorrectPasswordException();
-        }
+        validatePasswordIsCorrect(signInForm.getPassword(), signedUpUser.getPassword());
 
         return SignInResponseDto.of(signedUpUser.getUsername(), signedUpUser.getRoles());
 
@@ -109,23 +119,45 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
     }
 
-    // TODO
+    // TODO(추후 mailgun 서비스 이용)
     @Override
-    public void requestPasswordReset(String email) {
+    @Transactional(isolation = READ_COMMITTED, timeout = 10)
+    public String requestPasswordReset(String email, String token) {
+
+        User user = validateEmailIsValid(email);
+
+        PasswordResetToken passwordResetToken = PasswordResetToken.of(token, user);
+
+        passwordResetTokenRepository.save(passwordResetToken);
+
+        String passwordResetUrl = "http://" + ec2Ip + ":" + serverPort + "/password-reset?token=" + token;
+
+        return passwordResetUrl;
 
     }
 
-    // TODO
     @Override
-    public void resetPassword(String password) {
+    @Transactional(isolation = READ_COMMITTED, timeout = 10)
+    public void resetPassword(String token, PasswordRequestDto passwordRequestDto) {
+
+        PasswordResetToken passwordResetToken = validateTokenIsValid(token);
+
+        User user = passwordResetToken.getUser();
+        User changedUser = user.withPassword(passwordRequestDto);
+        userRepository.save(changedUser);
+
+        passwordResetTokenRepository.delete(passwordResetToken);
 
     }
 
     @Override
+    @Transactional(isolation = READ_COMMITTED, timeout = 10)
     public void deleteUser(String username, PasswordRequestDto passwordRequestDto) {
 
-        User user = validateUsernameAndPassword
-                (username, passwordRequestDto.getPassword());
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
+
+        validatePasswordIsCorrect(passwordRequestDto.getPassword(), user.getPassword());
 
         userRepository.delete(user);
 
@@ -153,6 +185,14 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
     }
 
+    private void validatePasswordIsCorrect(String password1, String password2) {
+
+        if (!passwordEncoder.matches(password1, password2)) {
+            throw new IncorrectPasswordException();
+        }
+
+    }
+
     private User validateUserExists(String emailOrUsername) {
 
         return emailOrUsername.contains("@")
@@ -165,18 +205,28 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
     }
 
-    private User validateUsernameAndPassword(String username, String password) {
+    private User validateEmailIsValid(String email) {
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
-
-        if (!user.getPassword().equals(password)) {
-            throw new IncorrectPasswordException();
+        if (!email.contains("@")) {
+            throw new IllegalArgumentException("email 형식이 올바르지 않습니다. 예: abcd@abc.com");
         }
 
-        return user;
-
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. email: " + email));
     }
 
+    private PasswordResetToken validateTokenIsValid(String token) {
+
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findById(token)
+                .orElseThrow(() -> new EntityNotFoundException
+                        ("토큰이 유효하지 않습니다. 잘못된 URL이 입력되었을 수 있습니다."));
+
+        if (passwordResetToken.getExpirationDate().isBefore(LocalDateTime.now())) {
+            throw new TokenExpiredException();
+        }
+
+        return passwordResetToken;
+
+    }
 
 }
