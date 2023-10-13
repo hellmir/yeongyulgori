@@ -138,7 +138,7 @@ public class User extends BaseEntity implements UserDetails {
                 .id(id)
                 .email(Optional.ofNullable(crucialInformationUpdateDto.getEmail()).orElse(email))
                 .username(username)
-                .password(Optional.ofNullable(crucialInformationUpdateDto.getPassword()).orElse(password))
+                .password(Optional.ofNullable(crucialInformationUpdateDto.getNewPassword()).orElse(password))
                 .fullName(fullName)
                 .birthDate(birthDate)
                 .phoneNumber(Optional.ofNullable(crucialInformationUpdateDto.getPhoneNumber()).orElse(phoneNumber))

@@ -23,12 +23,12 @@ import static org.springframework.transaction.annotation.Isolation.READ_COMMITTE
  */
 @Service
 @RequiredArgsConstructor
+@Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 10)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
     @Override
-    @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 10)
     public UserResponseDto getUserProfile(String username) {
 
         User user = userRepository.findByUsername(username)
