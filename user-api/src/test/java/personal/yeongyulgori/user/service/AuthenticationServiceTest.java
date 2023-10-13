@@ -14,6 +14,7 @@ import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException
 import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
 import personal.yeongyulgori.user.model.constant.Role;
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.dto.PasswordRequestDto;
 import personal.yeongyulgori.user.model.dto.SignInResponseDto;
 import personal.yeongyulgori.user.model.dto.UserResponseDto;
 import personal.yeongyulgori.user.model.entity.User;
@@ -466,8 +467,10 @@ class AuthenticationServiceTest {
 
         userRepository.save(user);
 
+        PasswordRequestDto passwordRequestDto = new PasswordRequestDto(password);
+
         // when
-        authenticationService.deleteUser(username, password);
+        authenticationService.deleteUser(username, passwordRequestDto);
 
         // then
         assertThat(userRepository.findById(user.getId()).isPresent()).isFalse();
@@ -484,9 +487,11 @@ class AuthenticationServiceTest {
 
         userRepository.save(user);
 
+        PasswordRequestDto passwordRequestDto = new PasswordRequestDto(PASSWORD1);
+
         // when, then
         assertThatThrownBy(() -> authenticationService
-                .deleteUser(USERNAME2, PASSWORD1))
+                .deleteUser(USERNAME2, passwordRequestDto))
                 .isInstanceOf(NonExistentUserException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: " + USERNAME2);
 
@@ -502,9 +507,11 @@ class AuthenticationServiceTest {
 
         userRepository.save(user);
 
+        PasswordRequestDto passwordRequestDto = new PasswordRequestDto(PASSWORD2);
+
         // when, then
         assertThatThrownBy(() -> authenticationService
-                .deleteUser(USERNAME1, PASSWORD2))
+                .deleteUser(USERNAME1, passwordRequestDto))
                 .isInstanceOf(IncorrectPasswordException.class)
                 .hasMessage("비밀번호가 일치하지 않습니다.");
 
