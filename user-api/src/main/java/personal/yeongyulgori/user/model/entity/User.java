@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import personal.yeongyulgori.user.base.BaseEntity;
 import personal.yeongyulgori.user.model.constant.Role;
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.dto.PasswordRequestDto;
 import personal.yeongyulgori.user.model.entity.embedment.Address;
 import personal.yeongyulgori.user.model.form.InformationUpdateForm;
 import personal.yeongyulgori.user.model.form.SignUpForm;
@@ -141,6 +142,24 @@ public class User extends BaseEntity implements UserDetails {
                 .fullName(fullName)
                 .birthDate(birthDate)
                 .phoneNumber(Optional.ofNullable(crucialInformationUpdateDto.getPhoneNumber()).orElse(phoneNumber))
+                .address(address)
+                .roles(roles)
+                .profileImage(profileImage)
+                .createdAt(getCreatedAt())
+                .build();
+
+    }
+
+    public User withPassword(PasswordRequestDto passwordRequestDto) {
+
+        return User.builder()
+                .id(id)
+                .email(email)
+                .username(username)
+                .password(passwordRequestDto.getPassword())
+                .fullName(fullName)
+                .birthDate(birthDate)
+                .phoneNumber(phoneNumber)
                 .address(address)
                 .roles(roles)
                 .profileImage(profileImage)
