@@ -13,6 +13,7 @@ import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameExcepti
 import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException;
 import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.dto.PasswordRequestDto;
 import personal.yeongyulgori.user.model.dto.SignInResponseDto;
 import personal.yeongyulgori.user.model.dto.UserResponseDto;
 import personal.yeongyulgori.user.model.entity.User;
@@ -69,7 +70,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
             throw new IncorrectPasswordException();
         }
 
-        return SignInResponseDto.of(signedUpUser.getUsername(), signedUpUser.getAuthorities());
+        return SignInResponseDto.of(signedUpUser.getUsername(), signedUpUser.getRoles());
 
     }
 
@@ -120,16 +121,11 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
     }
 
-    // TODO
     @Override
-    public void deleteUser(String username, String password) {
+    public void deleteUser(String username, PasswordRequestDto passwordRequestDto) {
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
-
-        if (!user.getPassword().equals(password)) {
-            throw new IncorrectPasswordException();
-        }
+        User user = validateUsernameAndPassword
+                (username, passwordRequestDto.getPassword());
 
         userRepository.delete(user);
 
@@ -168,5 +164,19 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
                         ("해당 회원이 존재하지 않습니다. username: " + emailOrUsername));
 
     }
+
+    private User validateUsernameAndPassword(String username, String password) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
+
+        if (!user.getPassword().equals(password)) {
+            throw new IncorrectPasswordException();
+        }
+
+        return user;
+
+    }
+
 
 }
