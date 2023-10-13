@@ -39,6 +39,7 @@ import static org.springframework.transaction.annotation.Isolation.REPEATABLE_RE
  */
 @Service
 @RequiredArgsConstructor
+@Transactional(isolation = READ_COMMITTED, timeout = 10)
 public class AuthenticationServiceImpl implements AuthenticationService, UserDetailsService {
 
     private final AutoCompleteService autoCompleteService;
@@ -115,13 +116,14 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         User user = userRepository.findById(crucialInformationUpdateDto.getId())
                 .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
 
+        validatePasswordIsCorrect(crucialInformationUpdateDto.getPassword(), user.getPassword());
+
         userRepository.save(user.withCrucialData(crucialInformationUpdateDto));
 
     }
 
     // TODO(추후 mailgun 서비스 이용)
     @Override
-    @Transactional(isolation = READ_COMMITTED, timeout = 10)
     public String requestPasswordReset(String email, String token) {
 
         User user = validateEmailIsValid(email);
@@ -137,7 +139,6 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     }
 
     @Override
-    @Transactional(isolation = READ_COMMITTED, timeout = 10)
     public void resetPassword(String token, PasswordRequestDto passwordRequestDto) {
 
         PasswordResetToken passwordResetToken = validateTokenIsValid(token);
@@ -151,7 +152,6 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     }
 
     @Override
-    @Transactional(isolation = READ_COMMITTED, timeout = 10)
     public void deleteUser(String username, PasswordRequestDto passwordRequestDto) {
 
         User user = userRepository.findByUsername(username)
@@ -208,18 +208,19 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     private User validateEmailIsValid(String email) {
 
         if (!email.contains("@")) {
-            throw new IllegalArgumentException("email 형식이 올바르지 않습니다. 예: abcd@abc.com");
+            throw new IllegalArgumentException("이메일 형식이 올바르지 않습니다. 예: abcd@abc.com");
         }
 
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. email: " + email));
+
     }
 
     private PasswordResetToken validateTokenIsValid(String token) {
 
         PasswordResetToken passwordResetToken = passwordResetTokenRepository.findById(token)
                 .orElseThrow(() -> new EntityNotFoundException
-                        ("토큰이 유효하지 않습니다. 잘못된 URL이 입력되었을 수 있습니다."));
+                        ("토큰이 유효하지 않습니다. 잘못된 URL이 입력되었을 수 있습니다. token: " + token));
 
         if (passwordResetToken.getExpirationDate().isBefore(LocalDateTime.now())) {
             throw new TokenExpiredException();
