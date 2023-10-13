@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
@@ -52,6 +53,9 @@ class AuthenticationServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private AutoCompleteService autoCompleteService;
@@ -117,6 +121,30 @@ class AuthenticationServiceTest {
         assertThat(userResponseDto.getUsername()).isEqualTo(username);
         assertThat(userResponseDto.getRoles().get(0)).isEqualTo(role1);
         assertThat(userResponseDto.getRoles().get(1)).isEqualTo(role2);
+
+    }
+
+    @DisplayName("회원 가입 시 비밀번호를 암호화 해 저장할 수 있다.")
+    @ParameterizedTest
+    @CsvSource({
+            "abcd@abc.com, person1, 1234, 홍길동, 2000-01-01, 01012345678, ROLE_GENERAL_USER, ROLE_BUSINESS_USER",
+            "abcd@abcd.com, person2, 12345, 고길동, 2000-02-02, 01012345679, ROLE_BUSINESS_USER, ROLE_GENERAL_USER",
+            "abcd@abcde.com, person3, 123456, 김길동, 2000-03-03, 01012345680, ROLE_GENERAL_USER, ROLE_ADMIN"
+    })
+    void signUpUserWithEncodingPassword(String email, String username, String password, String fullName,
+                                        LocalDate birthDate, String phoneNumber, Role role1, Role role2) {
+
+        // given
+        SignUpForm signUpForm = enterUserForm
+                (email, username, password, fullName, birthDate, phoneNumber, List.of(role1, role2));
+
+        // when
+        authenticationService.signUpUser(signUpForm);
+        User user = userRepository.findByEmail(email).get();
+
+        // then
+        assertThat(user.getPassword()).isNotEqualTo(password);
+        assertThat(passwordEncoder.matches(password, user.getPassword())).isTrue();
 
     }
 
@@ -249,10 +277,17 @@ class AuthenticationServiceTest {
 
         authenticationService.signUpUser(signUpForm);
 
-        SignInForm signInForm1 = new SignInForm(EMAIL1, PASSWORD1);
-        SignInForm signInForm2 = new SignInForm(USERNAME1, PASSWORD1);
+        SignInForm signInForm1 = new SignInForm(EMAIL1, PASSWORD2);
+        SignInForm signInForm2 = new SignInForm(USERNAME1, PASSWORD3);
 
         // when, then
+        assertThatThrownBy(() -> authenticationService.signInUser(signInForm1))
+                .isInstanceOf(IncorrectPasswordException.class)
+                .hasMessage("비밀번호가 일치하지 않습니다.");
+
+        assertThatThrownBy(() -> authenticationService.signInUser(signInForm2))
+                .isInstanceOf(IncorrectPasswordException.class)
+                .hasMessage("비밀번호가 일치하지 않습니다.");
 
     }
 
@@ -394,54 +429,64 @@ class AuthenticationServiceTest {
     void updateCrucialUserInformation() {
 
         // given
-        User user1 = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
-                BIRTH_DATE1,
-                PHONE_NUMBER1, new ArrayList<>(List.of(ROLE_GENERAL_USER)));
-        User user2 = createUser(EMAIL2, USERNAME2, PASSWORD2, FULL_NAME2,
-                BIRTH_DATE2,
-                PHONE_NUMBER2, new ArrayList<>(List.of(ROLE_BUSINESS_USER)));
-        User user3 = createUser(EMAIL3, USERNAME3, PASSWORD3, FULL_NAME3,
-                BIRTH_DATE3,
-                PHONE_NUMBER3, new ArrayList<>(List.of(ROLE_ADMIN)));
+        SignUpForm signUpForm1 = enterUserForm(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
-        userRepository.saveAll(List.of(user1, user2, user3));
+        SignUpForm signUpForm2 = enterUserForm(EMAIL2, USERNAME2,
+                PASSWORD2, FULL_NAME2, BIRTH_DATE2,
+                PHONE_NUMBER2, List.of(ROLE_BUSINESS_USER));
+
+        SignUpForm signUpForm3 = enterUserForm(EMAIL3, USERNAME3,
+                PASSWORD3, FULL_NAME3, BIRTH_DATE3,
+                PHONE_NUMBER3, List.of(ROLE_ADMIN));
+
+        authenticationService.signUpUser(signUpForm1);
+        authenticationService.signUpUser(signUpForm2);
+        authenticationService.signUpUser(signUpForm3);
+
+        List<User> users = userRepository.findAll();
+
+        entityManager.refresh(users.get(0));
+        entityManager.refresh(users.get(1));
+        entityManager.refresh(users.get(2));
 
         CrucialInformationUpdateDto crucialInformationUpdateDto1 = CrucialInformationUpdateDto.builder()
-                .id(user1.getId())
+                .id(users.get(0).getId())
                 .email(EMAIL4)
+                .password(PASSWORD1)
                 .build();
 
         CrucialInformationUpdateDto crucialInformationUpdateDto2 = CrucialInformationUpdateDto.builder()
-                .id(user2.getId())
-                .password(PASSWORD3)
+                .id(users.get(1).getId())
+                .phoneNumber(PHONE_NUMBER3)
+                .password(PASSWORD2)
                 .build();
 
         CrucialInformationUpdateDto crucialInformationUpdateDto3 = CrucialInformationUpdateDto.builder()
-                .id(user3.getId())
-                .phoneNumber(PHONE_NUMBER4)
+                .id(users.get(2).getId())
+                .password(PASSWORD3)
+                .newPassword(PASSWORD4)
                 .build();
 
         // when
-        authenticationService.updateCrucialUserInformation(user1.getUsername(), crucialInformationUpdateDto1);
-        authenticationService.updateCrucialUserInformation(user2.getUsername(), crucialInformationUpdateDto2);
-        authenticationService.updateCrucialUserInformation(user3.getUsername(), crucialInformationUpdateDto3);
-
-        User savedUser1 = userRepository.findById(user1.getId()).get();
-        User savedUser2 = userRepository.findById(user2.getId()).get();
-        User savedUser3 = userRepository.findById(user3.getId()).get();
+        authenticationService.updateCrucialUserInformation(users.get(0).getUsername(), crucialInformationUpdateDto1);
+        authenticationService.updateCrucialUserInformation(users.get(1).getUsername(), crucialInformationUpdateDto2);
+        authenticationService.updateCrucialUserInformation(users.get(2).getUsername(), crucialInformationUpdateDto3);
 
         // then
-        assertThat(savedUser1.getEmail()).isEqualTo(EMAIL4);
-        assertThat(savedUser1.getPassword()).isEqualTo(PASSWORD1);
-        assertThat(savedUser1.getPhoneNumber()).isEqualTo(PHONE_NUMBER1);
+        assertThat(users.get(0).getEmail()).isEqualTo(EMAIL4);
+        assertThat(users.get(0).getPhoneNumber()).isEqualTo(PHONE_NUMBER1);
+        assertThat(passwordEncoder.matches(PASSWORD1, users.get(0).getPassword())).isTrue();
 
-        assertThat(savedUser2.getEmail()).isEqualTo(EMAIL2);
-        assertThat(savedUser2.getPassword()).isEqualTo(PASSWORD3);
-        assertThat(savedUser2.getPhoneNumber()).isEqualTo(PHONE_NUMBER2);
+        assertThat(users.get(1).getEmail()).isEqualTo(EMAIL2);
+        assertThat(users.get(1).getPhoneNumber()).isEqualTo(PHONE_NUMBER3);
+        assertThat(passwordEncoder.matches(PASSWORD2, users.get(1).getPassword())).isTrue();
 
-        assertThat(savedUser3.getEmail()).isEqualTo(EMAIL3);
-        assertThat(savedUser3.getPassword()).isEqualTo(PASSWORD3);
-        assertThat(savedUser3.getPhoneNumber()).isEqualTo(PHONE_NUMBER4);
+        assertThat(users.get(2).getEmail()).isEqualTo(EMAIL3);
+        assertThat(users.get(2).getPhoneNumber()).isEqualTo(PHONE_NUMBER3);
+        assertThat(passwordEncoder.matches(PASSWORD3, users.get(2).getPassword())).isFalse();
+        assertThat(passwordEncoder.matches(PASSWORD4, users.get(2).getPassword())).isTrue();
 
     }
 
@@ -450,13 +495,18 @@ class AuthenticationServiceTest {
     void updateCrucialUserInformationByWrongUserId() {
 
         // given
-        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
-                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+        SignUpForm signUpForm = enterUserForm(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
-        userRepository.save(user);
+        authenticationService.signUpUser(signUpForm);
+
+        User user = userRepository.findByEmail(EMAIL1).get();
 
         CrucialInformationUpdateDto crucialInformationUpdateDto = CrucialInformationUpdateDto.builder()
                 .id(user.getId() + 1)
+                .email(EMAIL2)
+                .password(PASSWORD1)
                 .build();
 
         // when, then
@@ -464,6 +514,32 @@ class AuthenticationServiceTest {
                 .updateCrucialUserInformation(user.getUsername(), crucialInformationUpdateDto))
                 .isInstanceOf(NonExistentUserException.class)
                 .hasMessage("해당 회원이 존재하지 않습니다. username: " + user.getUsername());
+
+    }
+
+    @DisplayName("잘못된 비밀번호로 중요한 회원 개인 정보를 수정하려 하면 IncorrectPasswordException이 발생한다.")
+    @Test
+    void updateCrucialUserInformationByWrongPassword() {
+
+        // given
+        SignUpForm signUpForm = enterUserForm(EMAIL1, USERNAME1,
+                PASSWORD1, FULL_NAME1, BIRTH_DATE1,
+                PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        authenticationService.signUpUser(signUpForm);
+
+        User user = userRepository.findByEmail(EMAIL1).get();
+
+        CrucialInformationUpdateDto crucialInformationUpdateDto = CrucialInformationUpdateDto.builder()
+                .id(user.getId())
+                .password(PASSWORD2)
+                .build();
+
+        // when, then
+        assertThatThrownBy(() -> authenticationService
+                .updateCrucialUserInformation(user.getUsername(), crucialInformationUpdateDto))
+                .isInstanceOf(IncorrectPasswordException.class)
+                .hasMessage("비밀번호가 일치하지 않습니다.");
 
     }
 
@@ -502,7 +578,7 @@ class AuthenticationServiceTest {
         // when, then
         assertThatThrownBy(() -> authenticationService.requestPasswordReset("abcde.com", token))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("email 형식이 올바르지 않습니다. 예: " + EMAIL1);
+                .hasMessage("이메일 형식이 올바르지 않습니다. 예: " + EMAIL1);
 
     }
 
@@ -572,7 +648,7 @@ class AuthenticationServiceTest {
         // when, then
         assertThatThrownBy(() -> authenticationService.resetPassword(token + "-", passwordRequestDto))
                 .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("토큰이 유효하지 않습니다. 잘못된 URL이 입력되었을 수 있습니다.");
+                .hasMessage("토큰이 유효하지 않습니다. 잘못된 URL이 입력되었을 수 있습니다. token: " + token + "-");
 
     }
 
