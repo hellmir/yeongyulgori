@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,21 +13,26 @@ import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
 import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException;
 import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
+import personal.yeongyulgori.user.exception.significant.sub.TokenExpiredException;
 import personal.yeongyulgori.user.model.constant.Role;
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
 import personal.yeongyulgori.user.model.dto.PasswordRequestDto;
 import personal.yeongyulgori.user.model.dto.SignInResponseDto;
 import personal.yeongyulgori.user.model.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.entity.PasswordResetToken;
 import personal.yeongyulgori.user.model.entity.User;
 import personal.yeongyulgori.user.model.entity.embedment.Address;
 import personal.yeongyulgori.user.model.form.InformationUpdateForm;
 import personal.yeongyulgori.user.model.form.SignInForm;
 import personal.yeongyulgori.user.model.form.SignUpForm;
+import personal.yeongyulgori.user.model.repository.PasswordResetTokenRepository;
 import personal.yeongyulgori.user.model.repository.UserRepository;
+import personal.yeongyulgori.user.security.JwtTokenProvider;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +57,19 @@ class AuthenticationServiceTest {
     private AutoCompleteService autoCompleteService;
 
     @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Value("${spring.redis.host}")
+    private String ec2Ip;
+
+    @Value(("${server.port}"))
+    private String serverPort;
 
     @DisplayName("올바른 회원 가입 양식을 전송하면 회원 가입을 할 수 있다.")
     @ParameterizedTest
@@ -220,9 +238,9 @@ class AuthenticationServiceTest {
 
     }
 
-    @DisplayName("")
+    @DisplayName("잘못된 비밀번호를 통해 로그인하려 하면 IncorrectPasswordException이 발생한다.")
     @Test
-    void signInUseWithWrongPassword() {
+    void signInUserWithWrongPassword() {
 
         // given
         SignUpForm signUpForm = enterUserForm(EMAIL1, USERNAME1,
@@ -449,7 +467,143 @@ class AuthenticationServiceTest {
 
     }
 
-    // TODO
+    @DisplayName("이메일 주소를 통해 비밀번호 재설정을 요청하고, 비밀번호 재설정 URL을 반환 받을 수 있다.")
+    @Test
+    void requestPasswordReset() {
+
+        // given
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        userRepository.save(user);
+
+        String token = jwtTokenProvider.generateToken(EMAIL1);
+
+        // when
+        String url = authenticationService.requestPasswordReset(user.getEmail(), token);
+
+        // then
+        assertThat(url).isEqualTo("http://" + ec2Ip + ":" + serverPort + "/password-reset?token=" + token);
+
+    }
+
+    @DisplayName("잘못된 형식의 이메일 주소를 전송하면 IllegalStateException이 발생한다.")
+    @Test
+    void requestPasswordResetWithWrongEmailForm() {
+
+        // given
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        userRepository.save(user);
+
+        String token = jwtTokenProvider.generateToken(EMAIL1);
+
+        // when, then
+        assertThatThrownBy(() -> authenticationService.requestPasswordReset("abcde.com", token))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("email 형식이 올바르지 않습니다. 예: " + EMAIL1);
+
+    }
+
+    @DisplayName("존재하지 않는 이메일 주소를 전송하면 NonExistenceException이 발생한다.")
+    @Test
+    void requestPasswordResetWithNonExisetentEmail() {
+
+        // given
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        userRepository.save(user);
+
+        String token = jwtTokenProvider.generateToken(EMAIL1);
+
+        // when, then
+        assertThatThrownBy(() -> authenticationService.requestPasswordReset(EMAIL2, token))
+                .isInstanceOf(NonExistentUserException.class)
+                .hasMessage("해당 회원이 존재하지 않습니다. email: " + EMAIL2);
+
+    }
+
+    @DisplayName("발급 받은 토큰과 새로운 비밀번호를 통해 새로운 비밀번호를 설정할 수 있다.")
+    @Test
+    void resetPassword() {
+
+        // given
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        userRepository.save(user);
+
+        String token = jwtTokenProvider.generateToken(EMAIL1);
+
+        authenticationService.requestPasswordReset(user.getEmail(), token);
+
+        entityManager.refresh(user);
+
+        PasswordRequestDto passwordRequestDto = new PasswordRequestDto(PASSWORD2);
+
+        // when
+        authenticationService.resetPassword(token, passwordRequestDto);
+
+        // then
+        assertThat(user.getPassword()).isEqualTo(PASSWORD2);
+
+    }
+
+    @DisplayName("존재하지 않는 토큰을 통해 비밀번호를 재설정하려 하면 EntityNotFoundException이 발생한다.")
+    @Test
+    void resetPasswordWithInvalidToken() {
+
+        // given
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        userRepository.save(user);
+
+        String token = jwtTokenProvider.generateToken(EMAIL1);
+
+        authenticationService.requestPasswordReset(user.getEmail(), token);
+
+        entityManager.refresh(user);
+
+        PasswordRequestDto passwordRequestDto = new PasswordRequestDto(PASSWORD2);
+
+        // when, then
+        assertThatThrownBy(() -> authenticationService.resetPassword(token + "-", passwordRequestDto))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("토큰이 유효하지 않습니다. 잘못된 URL이 입력되었을 수 있습니다.");
+
+    }
+
+    @DisplayName("유효기간이 만료된 토큰을 통해 비밀번호를 재설정하려 하면 TokenExpiredException이 발생한다.")
+    @Test
+    void resetPasswordWithExpiredToken() {
+
+        // given
+        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+
+        userRepository.save(user);
+
+        String token = jwtTokenProvider.generateToken(EMAIL1);
+
+        authenticationService.requestPasswordReset(user.getEmail(), token);
+
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findById(token).get();
+        passwordResetToken.setExpirationDate(LocalDateTime.now().minusDays(1));
+
+        entityManager.refresh(user);
+
+        PasswordRequestDto passwordRequestDto = new PasswordRequestDto(PASSWORD2);
+
+        // when, then
+        assertThatThrownBy(() -> authenticationService.resetPassword(token, passwordRequestDto))
+                .isInstanceOf(TokenExpiredException.class)
+                .hasMessage("토큰이 만료되었습니다. 비밀번호를 재설정하려면 새로운 토큰을 발급 받아야 합니다.");
+
+    }
+
     @DisplayName("비밀번호 인증을 통해 회원을 탈퇴할 수 있다.")
     @ParameterizedTest
     @CsvSource({
@@ -463,9 +617,12 @@ class AuthenticationServiceTest {
     ) {
 
         // given
-        User user = createUser(email, username, password, fullName, birthDate, phoneNumber, List.of(role));
+        SignUpForm signUpForm = enterUserForm
+                (email, username, password, fullName, birthDate, phoneNumber, List.of(role));
 
-        userRepository.save(user);
+        authenticationService.signUpUser(signUpForm);
+
+        Long userId = userRepository.findByEmail(email).get().getId();
 
         PasswordRequestDto passwordRequestDto = new PasswordRequestDto(password);
 
@@ -473,7 +630,7 @@ class AuthenticationServiceTest {
         authenticationService.deleteUser(username, passwordRequestDto);
 
         // then
-        assertThat(userRepository.findById(user.getId()).isPresent()).isFalse();
+        assertThat(userRepository.findById(userId).isPresent()).isFalse();
 
     }
 
@@ -482,10 +639,11 @@ class AuthenticationServiceTest {
     void deleteUserByWrongUsername() {
 
         // given
-        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
-                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+        SignUpForm signUpForm = enterUserForm
+                (EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                        BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
-        userRepository.save(user);
+        authenticationService.signUpUser(signUpForm);
 
         PasswordRequestDto passwordRequestDto = new PasswordRequestDto(PASSWORD1);
 
@@ -502,10 +660,11 @@ class AuthenticationServiceTest {
     void deleteUserByWrongPassword() {
 
         // given
-        User user = createUser(EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
-                BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
+        SignUpForm signUpForm = enterUserForm
+                (EMAIL1, USERNAME1, PASSWORD1, FULL_NAME1,
+                        BIRTH_DATE1, PHONE_NUMBER1, List.of(ROLE_GENERAL_USER));
 
-        userRepository.save(user);
+        authenticationService.signUpUser(signUpForm);
 
         PasswordRequestDto passwordRequestDto = new PasswordRequestDto(PASSWORD2);
 
