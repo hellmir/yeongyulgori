@@ -16,7 +16,6 @@ import personal.yeongyulgori.user.model.dto.UserResponseDto;
 import personal.yeongyulgori.user.model.entity.User;
 import personal.yeongyulgori.user.model.repository.UserRepository;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.List;
@@ -37,9 +36,6 @@ class UserServiceTest {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private EntityManager entityManager;
 
     @DisplayName("사용자 이름을 통해 다른 회원의 프로필을 조회할 수 있다.")
     @ParameterizedTest
