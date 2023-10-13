@@ -1,6 +1,7 @@
 package personal.yeongyulgori.user.service;
 
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.dto.PasswordRequestDto;
 import personal.yeongyulgori.user.model.dto.SignInResponseDto;
 import personal.yeongyulgori.user.model.dto.UserResponseDto;
 import personal.yeongyulgori.user.model.form.InformationUpdateForm;
@@ -23,6 +24,6 @@ public interface AuthenticationService {
 
     void resetPassword(String password);
 
-    void deleteUser(String username, String password);
+    void deleteUser(String username, PasswordRequestDto passwordRequestDto);
 
 }
