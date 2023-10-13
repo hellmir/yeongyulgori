@@ -7,12 +7,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import personal.yeongyulgori.user.exception.serious.sub.KeywordNotFoundException;
+import personal.yeongyulgori.user.exception.serious.sub.AutoCompleteValueNotFoundException;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static personal.yeongyulgori.user.testutil.TestConstant.*;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -33,22 +34,17 @@ class AutoCompleteServiceTest {
     @Test
     void addAutoCompleteKeyWord() {
 
-        // given
-        String name1 = "홍길동";
-        String name2 = "고길동";
-        String name3 = "김길동";
-
-        // when
-        autoCompleteService.addAutoCompleteKeyWord(name1);
-        autoCompleteService.addAutoCompleteKeyWord(name2);
-        autoCompleteService.addAutoCompleteKeyWord(name3);
+        // given, when
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME1);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME2);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME3);
 
         // then
         assertThat(trie).hasSize(3);
 
-        assertThat(trie.containsKey("홍길동")).isTrue();
-        assertThat(trie.containsKey("고길동")).isTrue();
-        assertThat(trie.containsKey("김길동")).isTrue();
+        assertThat(trie.containsKey(FULL_NAME1)).isTrue();
+        assertThat(trie.containsKey(FULL_NAME2)).isTrue();
+        assertThat(trie.containsKey(FULL_NAME3)).isTrue();
 
     }
 
@@ -57,24 +53,18 @@ class AutoCompleteServiceTest {
     void autoComplete() {
 
         // given
-        String name1 = "홍길동";
-        String name2 = "고길동";
-        String name3 = "홍길춘";
-        String name4 = "김길동";
-        String name5 = "홍길순";
-
-        autoCompleteService.addAutoCompleteKeyWord(name1);
-        autoCompleteService.addAutoCompleteKeyWord(name2);
-        autoCompleteService.addAutoCompleteKeyWord(name3);
-        autoCompleteService.addAutoCompleteKeyWord(name4);
-        autoCompleteService.addAutoCompleteKeyWord(name5);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME1);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME2);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME5);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME3);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME6);
 
         // when
-        List<String> autoCompleteWords = autoCompleteService.autoComplete("홍길");
+        List<String> autoCompleteWords = autoCompleteService.autoComplete(FRONT_PART_OF_NAME);
 
         // then
         assertThat(autoCompleteWords).hasSize(3);
-        assertThat(autoCompleteWords).containsExactlyInAnyOrder("홍길동", "홍길춘", "홍길순");
+        assertThat(autoCompleteWords).containsExactlyInAnyOrder(FULL_NAME1, FULL_NAME5, FULL_NAME6);
 
     }
 
@@ -83,22 +73,18 @@ class AutoCompleteServiceTest {
     void deleteAutoCompleteKeyword() {
 
         // given
-        String name1 = "홍길동";
-        String name2 = "고길동";
-        String name3 = "김길동";
-
-        autoCompleteService.addAutoCompleteKeyWord(name1);
-        autoCompleteService.addAutoCompleteKeyWord(name2);
-        autoCompleteService.addAutoCompleteKeyWord(name3);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME1);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME2);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME3);
 
         // when
-        autoCompleteService.deleteAutoCompleteKeyword(name2);
+        autoCompleteService.deleteAutoCompleteKeyword(FULL_NAME2);
 
         // then
         assertThat(trie).hasSize(2);
-        assertThat(trie.containsKey("홍길동")).isTrue();
-        assertThat(trie.containsKey("고길동")).isFalse();
-        assertThat(trie.containsKey("김길동")).isTrue();
+        assertThat(trie.containsKey(FULL_NAME1)).isTrue();
+        assertThat(trie.containsKey(FULL_NAME2)).isFalse();
+        assertThat(trie.containsKey(FULL_NAME3)).isTrue();
 
     }
 
@@ -107,17 +93,14 @@ class AutoCompleteServiceTest {
     void deleteAutoCompleteKeywordByNonExistKeyword() {
 
         // given
-        String name1 = "홍길순";
-        String name2 = "고길동";
-        String name3 = "김길동";
-
-        autoCompleteService.addAutoCompleteKeyWord(name2);
-        autoCompleteService.addAutoCompleteKeyWord(name3);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME5);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME2);
+        autoCompleteService.addAutoCompleteKeyWord(FULL_NAME3);
 
         // when, then
-        assertThatThrownBy(() -> autoCompleteService.deleteAutoCompleteKeyword("홍길동"))
-                .isInstanceOf(KeywordNotFoundException.class)
-                .hasMessage("해당 자동완성 키워드가 존재하지 않습니다. keyword: 홍길동");
+        assertThatThrownBy(() -> autoCompleteService.deleteAutoCompleteKeyword(FULL_NAME1))
+                .isInstanceOf(AutoCompleteValueNotFoundException.class)
+                .hasMessage("해당 자동완성 성명이 존재하지 않습니다. fullName: " + FULL_NAME1);
 
     }
 
