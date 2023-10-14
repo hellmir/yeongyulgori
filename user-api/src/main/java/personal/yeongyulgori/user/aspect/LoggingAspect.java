@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 import personal.yeongyulgori.user.model.form.SignInForm;
 import personal.yeongyulgori.user.model.form.SignUpForm;
+import personal.yeongyulgori.user.utility.MemoryUtil;
 
 @Component
 @Aspect
@@ -24,16 +25,19 @@ public class LoggingAspect {
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), signUpForm.getEmail(), signUpForm.getUsername());
 
+        long beforeMemory = MemoryUtil.usedMemory();
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
         Object process = joinPoint.proceed();
 
         stopWatch.stop();
-        log.info("'{}.{}' task was executed successfully by 'email: {}', 'username: {}', estimated time: {}ms",
+        long memoryUsage = MemoryUtil.usedMemory() - beforeMemory;
+
+        log.info("'{}.{}' task was executed successfully by 'email: {}', 'username: {}', estimated time: {} ms, used memory: {} bytes",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), signUpForm.getEmail(), signUpForm.getUsername(),
-                stopWatch.getTotalTimeMillis());
+                stopWatch.getTotalTimeMillis(), memoryUsage);
 
         return process;
 
@@ -46,17 +50,19 @@ public class LoggingAspect {
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), signInForm.getEmailOrUsername());
 
+        long beforeMemory = MemoryUtil.usedMemory();
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
         Object process = joinPoint.proceed();
 
         stopWatch.stop();
+        long memoryUsage = MemoryUtil.usedMemory() - beforeMemory;
 
-        log.info("'{}.{}' task was executed successfully by 'email or username: {}', estimated time: {}ms",
+        log.info("'{}.{}' task was executed successfully by 'email or username: {}', estimated time: {} ms, used memory: {} bytes",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), signInForm.getEmailOrUsername(),
-                stopWatch.getTotalTimeMillis());
+                stopWatch.getTotalTimeMillis(), memoryUsage);
 
         return process;
 
@@ -71,17 +77,19 @@ public class LoggingAspect {
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), parameterName, stringValue);
 
+        long beforeMemory = MemoryUtil.usedMemory();
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
         Object process = joinPoint.proceed();
 
         stopWatch.stop();
+        long memoryUsage = MemoryUtil.usedMemory() - beforeMemory;
 
-        log.info("'{}.{}' task was executed successfully by '{}: {}', estimated time: {}ms",
+        log.info("'{}.{}' task was executed successfully by '{}: {}', estimated time: {} ms, used memory: {} bytes",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), parameterName, stringValue,
-                stopWatch.getTotalTimeMillis());
+                stopWatch.getTotalTimeMillis(), memoryUsage);
 
         return process;
 
