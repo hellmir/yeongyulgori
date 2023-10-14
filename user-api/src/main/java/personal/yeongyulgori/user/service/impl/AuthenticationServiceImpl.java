@@ -118,6 +118,11 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
         validatePasswordIsCorrect(crucialInformationUpdateDto.getPassword(), user.getPassword());
 
+        if (crucialInformationUpdateDto.getNewPassword() != null) {
+            crucialInformationUpdateDto
+                    .setNewPassword(passwordEncoder.encode(crucialInformationUpdateDto.getNewPassword()));
+        }
+
         userRepository.save(user.withCrucialData(crucialInformationUpdateDto));
 
     }
