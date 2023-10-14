@@ -29,4 +29,8 @@ public class CrucialInformationUpdateDto {
     @Pattern(regexp = "^010\\d{8}$", message = "전화번호 형식이 잘못되었습니다. 예: 01012345678")
     private String phoneNumber;
 
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
+    }
+
 }
