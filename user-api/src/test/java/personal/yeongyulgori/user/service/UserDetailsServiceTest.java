@@ -20,7 +20,7 @@ import static personal.yeongyulgori.user.model.constant.Role.*;
 import static personal.yeongyulgori.user.testutil.TestConstant.*;
 import static personal.yeongyulgori.user.testutil.TestObjectFactory.enterUserForm;
 
-@ActiveProfiles
+@ActiveProfiles("test")
 @SpringBootTest
 public class UserDetailsServiceTest {
 
