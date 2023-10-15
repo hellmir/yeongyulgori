@@ -33,7 +33,8 @@ public class WebSecurityConfig {
                 .and()
                 .authorizeHttpRequests()
                 .antMatchers("/", "/swagger-ui/**", "/v2/api-docs", "/swagger-resources/**",
-                        "/**/signup", "/**/login", "/users/v1", "/users/v1/auto-complete")
+                        "/**/signup", "/**/login", "/users/v1", "/users/v1/auto-complete",
+                        "/users/v1/password-reset/**")
                 .permitAll()
                 .antMatchers(HttpMethod.GET, "/users/v1/{username}").permitAll()
                 .anyRequest().authenticated()
