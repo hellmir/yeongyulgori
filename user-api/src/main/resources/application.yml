@@ -27,11 +27,11 @@ spring:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
   redis:
-    host: ${EC2_IP}
+    host: 43.201.230.55
     port: 6379
     password: ${REDIS_PASSWORD}
   jwt:
-    secret: ${JWT_SECRET_KEY}
+    secret: c29jaWFsLW1lZGlhLXNwcmluZy1wcm9qZWN0LWJ5LWh5b2Jpbi15ZW9uZ3l1bHJvcmkK
 
 eureka:
   client:
