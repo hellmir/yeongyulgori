@@ -8,6 +8,6 @@ public interface UserService {
 
     UserResponseDto getUserProfile(String username);
 
-    Page<UserResponseDto> getSearchedUsers(String name, Pageable pageable);
+    Page<UserResponseDto> getSearchedUsers(String fullName, Pageable pageable);
 
 }

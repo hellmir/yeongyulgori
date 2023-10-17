@@ -53,7 +53,7 @@ public class UserController {
             @ApiImplicitParam(name = "sort.unsorted", value = "정렬 미사용 여부", dataTypeClass = Boolean.class,
                     paramType = "query", defaultValue = "false", example = "false"),
             @ApiImplicitParam(name = "sort", value = "정렬 방식", dataTypeClass = String.class,
-                    paramType = "query", defaultValue = "name,asc", example = "name,asc")
+                    paramType = "query", defaultValue = "fullName,asc", example = "fullName,asc")
     })
     @GetMapping()
     public ResponseEntity<Page<UserResponseDto>> searchUsers

@@ -2,67 +2,95 @@ package personal.yeongyulgori.user.service.impl;
 
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUserException;
 import personal.yeongyulgori.user.exception.general.sub.DuplicateUsernameException;
 import personal.yeongyulgori.user.exception.serious.sub.NonExistentUserException;
 import personal.yeongyulgori.user.exception.significant.sub.IncorrectPasswordException;
+import personal.yeongyulgori.user.exception.significant.sub.TokenExpiredException;
 import personal.yeongyulgori.user.model.dto.CrucialInformationUpdateDto;
+import personal.yeongyulgori.user.model.dto.PasswordRequestDto;
+import personal.yeongyulgori.user.model.dto.SignInResponseDto;
 import personal.yeongyulgori.user.model.dto.UserResponseDto;
+import personal.yeongyulgori.user.model.entity.PasswordResetToken;
 import personal.yeongyulgori.user.model.entity.User;
 import personal.yeongyulgori.user.model.form.InformationUpdateForm;
 import personal.yeongyulgori.user.model.form.SignInForm;
 import personal.yeongyulgori.user.model.form.SignUpForm;
+import personal.yeongyulgori.user.model.repository.PasswordResetTokenRepository;
 import personal.yeongyulgori.user.model.repository.UserRepository;
 import personal.yeongyulgori.user.service.AuthenticationService;
+import personal.yeongyulgori.user.service.AutoCompleteService;
+
+import javax.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
 
 import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
+import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
 
+/**
+ * 회원 서비스
+ */
 @Service
 @RequiredArgsConstructor
-public class AuthenticationServiceImpl implements AuthenticationService {
+@Transactional(isolation = READ_COMMITTED, timeout = 10)
+public class AuthenticationServiceImpl implements AuthenticationService, UserDetailsService {
 
+    private final AutoCompleteService autoCompleteService;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
-    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
+    @Value("${spring.redis.host}")
+    private String ec2Ip;
+
+    @Value(("${server.port}"))
+    private String serverPort;
 
     @Override
+    public UserDetails loadUserByUsername(String emailOrUsername) throws UsernameNotFoundException {
+        return validateUserExists(emailOrUsername);
+    }
+
+    @Override
+    @Transactional(isolation = REPEATABLE_READ, timeout = 20)
     public UserResponseDto signUpUser(SignUpForm signUpForm) {
 
-        log.info("Beginning to sign up user for email: {}, username: {}",
-                signUpForm.getEmail(), signUpForm.getUsername());
+        validateNotDuplicateUser(signUpForm.getUsername(), signUpForm.getEmail(), signUpForm.getPhoneNumber());
 
-        validateDuplicateUser(signUpForm.getEmail(), signUpForm.getUsername(), signUpForm.getPhoneNumber());
+        User savedUser = userRepository.save(User.from(signUpForm, passwordEncoder.encode(signUpForm.getPassword())));
 
-        User savedUser = userRepository.save(User.from(signUpForm));
+        autoCompleteService.addAutoCompleteKeyWord(savedUser.getFullName());
 
-        log.info("User signed up successfully for email: {}, username: {}",
-                savedUser.getEmail(), savedUser.getUsername());
-
-        return UserResponseDto.of(savedUser.getEmail(), savedUser.getUsername(), savedUser.getName(),
-                savedUser.getRole(), savedUser.getCreatedAt(), savedUser.getModifiedAt());
+        return UserResponseDto.of(savedUser.getEmail(), savedUser.getUsername(), savedUser.getFullName(),
+                savedUser.getRoles(), savedUser.getCreatedAt(), savedUser.getModifiedAt());
 
     }
 
-    // TODO
     @Override
-    public String signInUser(SignInForm signInForm) {
-        return null;
+    @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 10)
+    public SignInResponseDto signInUser(SignInForm signInForm) {
+
+        User signedUpUser = validateUserExists(signInForm.getEmailOrUsername());
+
+        validatePasswordIsCorrect(signInForm.getPassword(), signedUpUser.getPassword());
+
+        return SignInResponseDto.of(signedUpUser.getUsername(), signedUpUser.getRoles());
+
     }
 
     @Override
     @Transactional(isolation = READ_COMMITTED, readOnly = true, timeout = 10)
     public UserResponseDto getUserDetails(String username) {
 
-        log.info("Beginning to retrieve user profile for username: {}", username);
-
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
-
-        log.info("User profile retrieved successfully for username: {}", username);
 
         return UserResponseDto.from(user);
 
@@ -71,15 +99,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public UserResponseDto updateUserInformation(String username, InformationUpdateForm informationUpdateForm) {
 
-        log.info("Beginning to update user information for username: {}", username);
-
         User user = userRepository.findById(informationUpdateForm.getId())
                 .orElseThrow(() -> new NonExistentUserException
                         ("해당 회원이 존재하지 않습니다. username: " + username));
 
         User updatedUser = userRepository.save(user.withForm(username, informationUpdateForm));
-
-        log.info("User information updated successfully for username: {}", updatedUser.getUsername());
 
         return UserResponseDto.from(updatedUser);
 
@@ -89,61 +113,125 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void updateCrucialUserInformation
             (String username, CrucialInformationUpdateDto crucialInformationUpdateDto) {
 
-        log.info("Beginning to update crucial user information for username: {}", username);
-
         User user = userRepository.findById(crucialInformationUpdateDto.getId())
                 .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
 
+        validatePasswordIsCorrect(crucialInformationUpdateDto.getPassword(), user.getPassword());
+
+        if (crucialInformationUpdateDto.getNewPassword() != null) {
+            crucialInformationUpdateDto
+                    .setNewPassword(passwordEncoder.encode(crucialInformationUpdateDto.getNewPassword()));
+        }
+
         userRepository.save(user.withCrucialData(crucialInformationUpdateDto));
 
-        log.info("Crucial user information updated successfully for username: {}", username);
+    }
+
+    // TODO(추후 mailgun 서비스 이용)
+    @Override
+    public String requestPasswordReset(String email, String token) {
+
+        User user = validateEmailIsValid(email);
+
+        PasswordResetToken passwordResetToken = PasswordResetToken.of(token, user);
+
+        passwordResetTokenRepository.save(passwordResetToken);
+
+        String passwordResetUrl = "http://" + ec2Ip + ":" + serverPort + "/password-reset?token=" + token;
+
+        return passwordResetUrl;
 
     }
 
-    // TODO
     @Override
-    public void requestPasswordReset(String email) {
+    public void resetPassword(String token, PasswordRequestDto passwordRequestDto) {
+
+        PasswordResetToken passwordResetToken = validateTokenIsValid(token);
+
+        User user = passwordResetToken.getUser();
+        User changedUser = user.withPassword(passwordRequestDto);
+        userRepository.save(changedUser);
+
+        passwordResetTokenRepository.delete(passwordResetToken);
 
     }
 
-    // TODO
     @Override
-    public void resetPassword(String token, String password) {
-
-    }
-
-    // TODO
-    @Override
-    public void deleteUser(String username, String password) {
-
-        log.info("Beginning to delete user with username: {}", username);
+    public void deleteUser(String username, PasswordRequestDto passwordRequestDto) {
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. username: " + username));
 
-        if (!user.getPassword().equals(password)) {
-            throw new IncorrectPasswordException();
-        }
+        validatePasswordIsCorrect(passwordRequestDto.getPassword(), user.getPassword());
 
         userRepository.delete(user);
 
-        log.info("User deleted successfully for username: {}", username);
+        boolean isFullNameRemained = userRepository.existsByFullName(user.getFullName());
+
+        if (!isFullNameRemained) {
+            autoCompleteService.deleteAutoCompleteKeyword(user.getFullName());
+        }
 
     }
 
-    private void validateDuplicateUser(String email, String username, String phoneNumber) {
-
-        if (userRepository.existsByEmail(email)) {
-            throw new DuplicateUserException("이미 가입된 회원입니다. email: " + email);
-        }
-
-        if (userRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new DuplicateUserException("이미 가입된 회원입니다. phoneNumber: " + phoneNumber);
-        }
+    private void validateNotDuplicateUser(String username, String email, String phoneNumber) {
 
         if (userRepository.existsByUsername(username)) {
             throw new DuplicateUsernameException("중복된 사용자 이름입니다. username: " + username);
         }
+
+        if (userRepository.existsByEmail(email)) {
+            throw new DuplicateUserException("이미 가입된 이메일입니다. email: " + email);
+        }
+
+        if (userRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new DuplicateUserException("이미 가입된 전화번호입니다. phoneNumber: " + phoneNumber);
+        }
+
+    }
+
+    private void validatePasswordIsCorrect(String password1, String password2) {
+
+        if (!passwordEncoder.matches(password1, password2)) {
+            throw new IncorrectPasswordException();
+        }
+
+    }
+
+    private User validateUserExists(String emailOrUsername) {
+
+        return emailOrUsername.contains("@")
+                ? userRepository.findByEmail(emailOrUsername)
+                .orElseThrow(() -> new EntityNotFoundException
+                        ("해당 회원이 존재하지 않습니다. email: " + emailOrUsername))
+                : userRepository.findByUsername(emailOrUsername)
+                .orElseThrow(() -> new EntityNotFoundException
+                        ("해당 회원이 존재하지 않습니다. username: " + emailOrUsername));
+
+    }
+
+    private User validateEmailIsValid(String email) {
+
+        if (!email.contains("@")) {
+            throw new IllegalArgumentException("이메일 형식이 올바르지 않습니다. 예: abcd@abc.com");
+        }
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new NonExistentUserException("해당 회원이 존재하지 않습니다. email: " + email));
+
+    }
+
+    private PasswordResetToken validateTokenIsValid(String token) {
+
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findById(token)
+                .orElseThrow(() -> new EntityNotFoundException
+                        ("토큰이 유효하지 않습니다. 잘못된 URL이 입력되었을 수 있습니다. token: " + token));
+
+        if (passwordResetToken.getExpirationDate().isBefore(LocalDateTime.now())) {
+            throw new TokenExpiredException();
+        }
+
+        return passwordResetToken;
 
     }
 
