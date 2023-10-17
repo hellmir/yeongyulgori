@@ -30,7 +30,7 @@ pipeline {
             steps {
                 sh "chmod u+x ${WORKSPACE}/gradlew"
                 dir("${WORKSPACE}") {
-                    sh './gradlew clean build -x test'
+                    sh './gradlew :user-api:clean :user-api:build -x test'
                 }
             }
         }
