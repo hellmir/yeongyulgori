@@ -39,9 +39,6 @@ dependencies {
     // json
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
-    // eureka
-    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-
     // springfox
     implementation 'io.springfox:springfox-boot-starter:3.0.0'
     implementation 'io.springfox:springfox-swagger-ui:3.0.0'
@@ -56,7 +53,6 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j:8.0.32'
     testImplementation 'com.h2database:h2:2.1.214'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.7.12'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis:2.7.12'
 
     // security
     implementation 'org.springframework.boot:spring-boot-starter-security:2.7.8'
@@ -66,6 +62,7 @@ dependencies {
 
     // test
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.8'
+    testImplementation 'org.springframework.security:spring-security-test'
 
     // health check
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
