@@ -13,8 +13,8 @@ pipeline {
                     env.PROJECT_VERSION = projectVersion
                     env.JAR_PATH = "${WORKSPACE}/${env.PROJECT_NAME}/build/libs/${env.PROJECT_NAME}-${env.PROJECT_VERSION}.jar"
                 }
-                echo ${}projectName}
-                echo {$env.PROJECT_NAME}
+                echo ${projectName}
+                echo ${$env.PROJECT_NAME}
                 echo 'Environment variables set'
             }
         }
