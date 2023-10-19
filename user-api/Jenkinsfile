@@ -7,14 +7,12 @@ pipeline {
             steps {
                 script {
                     sh 'chmod +x ./gradlew'
-                    def projectName = sh(script:'./gradlew -q printProjectName', returnStdout:true).trim()
+                    def projectName = 'user-api'
                     def projectVersion = sh(script:'./gradlew -q printProjectVersion', returnStdout:true).trim()
                     env.PROJECT_NAME = projectName
                     env.PROJECT_VERSION = projectVersion
                     env.JAR_PATH = "${WORKSPACE}/${env.PROJECT_NAME}/build/libs/${env.PROJECT_NAME}-${env.PROJECT_VERSION}.jar"
                 }
-                echo "${projectName}"
-                echo "${$env.PROJECT_NAME}"
                 echo 'Environment variables set'
             }
         }
