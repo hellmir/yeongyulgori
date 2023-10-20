@@ -82,7 +82,7 @@ tasks.named('test') {
 
 task printProjectName {
     doLast {
-        println project.name
+        println 'user-api'
     }
 }
 
@@ -95,4 +95,3 @@ task printProjectVersion {
 jar {
     enabled = false
 }
-
