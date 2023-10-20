@@ -7,7 +7,7 @@ pipeline {
             steps {
                 script {
                     sh 'chmod +x ./gradlew'
-                    def projectName = 'user-api'
+                    def projectName = sh(script:'./gradlew -q printProjectName', returnStdout:true).trim()
                     def projectVersion = sh(script:'./gradlew -q printProjectVersion', returnStdout:true).trim()
                     env.PROJECT_NAME = projectName
                     env.PROJECT_VERSION = projectVersion
