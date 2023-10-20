@@ -39,7 +39,7 @@ pipeline {
             steps {
                 script {
                     def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}"
-                    sh "docker build --no-cache -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
+                    sh "docker build --build-arg CACHEBUST=$(date +%s) -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
                 }
             }
         }
