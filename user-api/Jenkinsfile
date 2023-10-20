@@ -40,8 +40,8 @@ pipeline {
                 script {
                     def cacheBust = sh(script: 'date +%s', returnStdout: true).trim()
                     def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}-${cacheBust}"
-                    sh "docker rmi $DOCKER_HUB_USER_NAME/${dockerImageTag} || true"  // 이 줄을 추가합니다.
-                    sh "docker build --build-arg CACHEBUST=${cacheBust} -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
+                    sh "docker rmi $DOCKER_HUB_USER_NAME/${dockerImageTag} || true"
+                    sh "docker build --no-cache=true --build-arg CACHEBUST=${cacheBust} -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
                 }
             }
         }
