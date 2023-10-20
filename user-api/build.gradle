@@ -82,7 +82,7 @@ tasks.named('test') {
 
 task printProjectName {
     doLast {
-        println 'user-api'
+        println project.name
     }
 }
 
