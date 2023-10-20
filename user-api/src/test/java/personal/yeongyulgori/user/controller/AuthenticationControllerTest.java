@@ -218,7 +218,6 @@ class AuthenticationControllerTest {
                 .thenReturn(userResponseDto);
 
         // when, then
-
         mockMvc.perform(patch("/users/v1/{username}", username)
                         .with(csrf())
                         .content(objectMapper.writeValueAsString(informationUpdateForm))
