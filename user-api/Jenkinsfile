@@ -38,7 +38,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}"
+                    def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}-${cacheBust}"
                     def cacheBust = sh(script: 'date +%s', returnStdout: true).trim()
                     sh "docker build --build-arg CACHEBUST=${cacheBust} -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
                 }
