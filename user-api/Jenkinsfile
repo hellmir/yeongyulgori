@@ -56,7 +56,8 @@ pipeline {
                         '''
                     }
 
-                    def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}"
+                    def cacheBust = sh(script: 'date +%s', returnStdout: true).trim()
+                    def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}-${cacheBust}"
                     sh "docker tag ${dockerImageTag} $DOCKER_HUB_USER_NAME/${dockerImageTag}"
                     sh "docker push $DOCKER_HUB_USER_NAME/${dockerImageTag}"
                 }
