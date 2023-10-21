@@ -43,7 +43,7 @@ pipeline {
                     env.DOCKER_IMAGE_TAG = dockerImageTag
                     sh "docker system prune -a -f"
                     sh "docker rmi $DOCKER_HUB_USER_NAME/${dockerImageTag} || true"
-                    sh "docker build --no-cache=true --build-arg CACHEBUST=${cacheBust} -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
+                    sh "docker build --no-cache=true --build-arg CACHEBUST=${cacheBust} --build-arg JAR_FILE=${env.JAR_PATH} -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
                 }
             }
         }
