@@ -40,6 +40,7 @@ pipeline {
                 script {
                     def cacheBust = sh(script: 'date +%s', returnStdout: true).trim()
                     def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}-${cacheBust}"
+                    env.DOCKER_IMAGE_TAG = dockerImageTag
                     sh "docker system prune -a -f"
                     sh "docker rmi $DOCKER_HUB_USER_NAME/${dockerImageTag} || true"
                     sh "docker build --no-cache=true --build-arg CACHEBUST=${cacheBust} -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
@@ -56,8 +57,7 @@ pipeline {
                         '''
                     }
 
-                    def cacheBust = sh(script: 'date +%s', returnStdout: true).trim()
-                    def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}-${cacheBust}"
+                    def dockerImageTag = env.DOCKER_IMAGE_TAG
                     sh "docker tag ${dockerImageTag} $DOCKER_HUB_USER_NAME/${dockerImageTag}"
                     sh "docker push $DOCKER_HUB_USER_NAME/${dockerImageTag}"
                 }
