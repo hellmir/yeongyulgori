@@ -16,7 +16,12 @@ echo "Removing existing container if it exists..."
 docker rm -f ${PROJECT_NAME}
 echo "3. Existing container removal complete"
 
-# 4. start Docker container
+# 4. pull the latest image from Docker Hub
+echo "Pulling latest image..."
+docker pull $DOCKER_IMAGE_TAG
+echo "Image pull complete"
+
+# 5. start Docker container
 DOCKER_IMAGE_TAG="${DOCKER_HUB_USER_NAME}/${PROJECT_NAME}:${PROJECT_VERSION}"
 echo "Starting Docker container with image tag..."
 docker run -d \
@@ -31,7 +36,7 @@ docker run -d \
     $DOCKER_IMAGE_TAG > ${HOME}/log.out 2> ${HOME}/err.out
 echo "4. Starting server complete"
 
-# 5. cron registration
+# 6. cron registration
 echo "Registering cron job..."
 touch crontab_new
 echo "* * * * * ${HOME}/check-and-restart.sh" 1>>crontab_new
