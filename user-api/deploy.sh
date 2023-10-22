@@ -23,7 +23,7 @@ echo "3.1 Existing image removal complete"
 
 # 4. pull the latest image from Docker Hub
 echo "Pulling latest image..."
-docker pull $DOCKER_HUB_USER_NAME/${PROJECT_NAME}:${PROJECT_VERSION}
+docker pull $DOCKER_IMAGE_TAG
 echo "4. Image pull complete"
 
 # 5. start Docker container
