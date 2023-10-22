@@ -18,11 +18,10 @@ echo "3. Existing container removal complete"
 
 # 4. pull the latest image from Docker Hub
 echo "Pulling latest image..."
-docker pull $DOCKER_IMAGE_TAG
+docker pull $DOCKER_HUB_USER_NAME/${PROJECT_NAME}:${PROJECT_VERSION}
 echo "4. Image pull complete"
 
 # 5. start Docker container
-DOCKER_IMAGE_TAG="${DOCKER_HUB_USER_NAME}/${PROJECT_NAME}:${PROJECT_VERSION}"
 echo "Starting Docker container with image tag..."
 docker run -d \
     --name $PROJECT_NAME \
@@ -33,7 +32,7 @@ docker run -d \
     -e SPRING_DATASOURCE_PASSWORD=$DB_USER_PASSWORD \
     -e EC2_IP=$EC2_IP \
     -e SPRING_REDIS_PASSWORD=$REDIS_PASSWORD \
-    $DOCKER_IMAGE_TAG > ${HOME}/log.out 2> ${HOME}/err.out
+    $DOCKER_HUB_USER_NAME/${PROJECT_NAME}:${PROJECT_VERSION} > ${HOME}/log.out 2> ${HOME}/err.out
 echo "5. Starting server complete"
 
 # 6. cron registration
