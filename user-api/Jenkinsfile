@@ -64,6 +64,12 @@ pipeline {
             }
         }
 
+        stage('Cleanup Old Docker Images') {
+            steps {
+                sh "docker rmi $(docker images -q $DOCKER_HUB_USER_NAME/${env.PROJECT_NAME} -f before=$DOCKER_IMAGE_TAG) || true"
+            }
+        }
+
         stage('Deploy to EC2') {
             steps {
                 script {
