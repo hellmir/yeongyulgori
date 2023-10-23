@@ -95,4 +95,3 @@ task printProjectVersion {
 jar {
     enabled = false
 }
-

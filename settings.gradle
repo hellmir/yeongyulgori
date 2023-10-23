@@ -1,6 +1,4 @@
 rootProject.name = 'yeongyulgori'
 include 'user-api'
 include 'post-api'
-include 'discovery-service'
-include 'api-gateway'
 
