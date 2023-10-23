@@ -20,6 +20,7 @@ pipeline {
         stage('Test') {
             steps {
                 dir("${WORKSPACE}") {
+                echo "projectName: ${env.PROJECT_NAME}"
                     sh "./gradlew :${env.PROJECT_NAME}:test"
                 }
                 echo 'Tests complete'
@@ -38,12 +39,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def cacheBust = sh(script: 'date +%s', returnStdout: true).trim()
-                    def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}-${cacheBust}"
-                    env.DOCKER_IMAGE_TAG = dockerImageTag
-                    sh "docker system prune -a -f"
-                    sh "docker rmi $DOCKER_HUB_USER_NAME/${dockerImageTag} || true"
-                    sh "docker build --no-cache=true --build-arg CACHEBUST=${cacheBust} --build-arg JAR_FILE=${env.JAR_PATH} -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
+                    def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}"
+                    sh "docker build --no-cache -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
                 }
             }
         }
@@ -57,7 +54,7 @@ pipeline {
                         '''
                     }
 
-                    def dockerImageTag = env.DOCKER_IMAGE_TAG
+                    def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}"
                     sh "docker tag ${dockerImageTag} $DOCKER_HUB_USER_NAME/${dockerImageTag}"
                     sh "docker push $DOCKER_HUB_USER_NAME/${dockerImageTag}"
                 }
@@ -89,7 +86,7 @@ pipeline {
                         ssh -i "$EC2_DEPLOY_KEY" ubuntu@"$EC2_IP" "chmod +x ${EC2_DEPLOY_PATH}/set-up-docker.sh && ${EC2_DEPLOY_PATH}/set-up-docker.sh $DB_ROOT_PASSWORD $DB_USER_NAME $DB_USER_PASSWORD"
                         '''
                         sh '''
-                        ssh -i "$EC2_DEPLOY_KEY" ubuntu@"$EC2_IP" "export DOCKER_HUB_USER_NAME='$DOCKER_HUB_USER_NAME'; export DB_USER_NAME='$DB_USER_NAME'; export DB_USER_PASSWORD='$DB_USER_PASSWORD'; export EC2_IP='$EC2_IP'; export REDIS_PASSWORD='$REDIS_PASSWORD'; export JWT_SECRET_KEY='$JWT_SECRET_KEY'; export PROJECT_NAME='$PROJECT_NAME'; export PROJECT_VERSION='$PROJECT_VERSION'; ${EC2_DEPLOY_PATH}/deploy.sh"
+                        ssh -i "$EC2_DEPLOY_KEY" ubuntu@"$EC2_IP" "export DOCKER_HUB_USER_NAME='$DOCKER_HUB_USER_NAME'; export DB_USER_NAME='$DB_USER_NAME'; export DB_USER_PASSWORD='$DB_USER_PASSWORD'; export EC2_IP='$EC2_IP'; export REDIS_PASSWORD='$REDIS_PASSWORD'; export JWT_SECRET_KEY=''$JWT_SECRET_KEY'; export PROJECT_NAME='$PROJECT_NAME'; export PROJECT_VERSION='$PROJECT_VERSION'; ${EC2_DEPLOY_PATH}/deploy.sh"
                         '''
                     }
                 }
