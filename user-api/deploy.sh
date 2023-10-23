@@ -16,17 +16,7 @@ echo "Removing existing container if it exists..."
 docker rm -f ${PROJECT_NAME}
 echo "3. Existing container removal complete"
 
-# 3.1 remove existing image if it exists
-echo "Removing existing image if it exists..."
-docker rmi $DOCKER_HUB_USER_NAME/${PROJECT_NAME}:${PROJECT_VERSION}
-echo "3.1 Existing image removal complete"
-
-# 4. pull the latest image from Docker Hub
-echo "Pulling latest image..."
-docker pull $DOCKER_IMAGE_TAG
-echo "4. Image pull complete"
-
-# 5. start Docker container
+# 4. start Docker container
 DOCKER_IMAGE_TAG="${DOCKER_HUB_USER_NAME}/${PROJECT_NAME}:${PROJECT_VERSION}"
 echo "Starting Docker container with image tag..."
 docker run -d \
@@ -39,12 +29,12 @@ docker run -d \
     -e EC2_IP=$EC2_IP \
     -e SPRING_REDIS_PASSWORD=$REDIS_PASSWORD \
     $DOCKER_IMAGE_TAG > ${HOME}/log.out 2> ${HOME}/err.out
-echo "5. Starting server complete"
+echo "4. Starting server complete"
 
-# 6. cron registration
+# 5. cron registration
 echo "Registering cron job..."
 touch crontab_new
 echo "* * * * * ${HOME}/check-and-restart.sh" 1>>crontab_new
 crontab crontab_new
 rm crontab_new
-echo "6. Cron registration complete"
+echo "5. Cron registration complete"
