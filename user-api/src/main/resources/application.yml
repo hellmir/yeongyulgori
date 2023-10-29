@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: user-api
+    name: ${PROJECT_NAME}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://mysql-container:3306/users?serverTimezone=UTC&characterEncoding=UTF-8
@@ -27,7 +27,7 @@ spring:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
   redis:
-    host: 43.201.230.55
+    host: redis-container
     port: 6379
     password: ${REDIS_PASSWORD}
   jwt:
