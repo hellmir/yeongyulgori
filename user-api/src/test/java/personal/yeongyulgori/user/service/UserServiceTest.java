@@ -38,11 +38,6 @@ class UserServiceTest {
     @Autowired
     private UserRepository userRepository;
 
-    @AfterEach
-    void tearDown() {
-        userRepository.deleteAll();
-    }
-
     @DisplayName("사용자 이름을 통해 다른 회원의 프로필을 조회할 수 있다.")
     @ParameterizedTest
     @CsvSource({
