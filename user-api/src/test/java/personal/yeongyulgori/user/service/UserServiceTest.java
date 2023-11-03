@@ -1,7 +1,7 @@
 package personal.yeongyulgori.user.service;
 
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -37,6 +37,11 @@ class UserServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @BeforeEach
+    void setUp() {
+        userRepository.deleteAll();
+    }
 
     @DisplayName("사용자 이름을 통해 다른 회원의 프로필을 조회할 수 있다.")
     @ParameterizedTest
