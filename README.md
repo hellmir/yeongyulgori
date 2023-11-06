@@ -24,4 +24,4 @@
 ![yeongyulgori-architecture](https://github.com/hellmir/yeongyulgori/assets/128391669/27c3e931-a42d-4ff0-8935-e0b0b58fc540)
 
 ## ERD
-![ERD](https://github.com/hellmir/yeongyulgori/assets/128391669/8bdd95c6-72b2-455e-ad23-f34ca14f43ae)
+![ERD](https://github.com/hellmir/yeongyulgori/assets/128391669/ade3d700-7194-42fe-bb32-24118ab8ea67)
