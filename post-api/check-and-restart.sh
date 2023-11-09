@@ -10,7 +10,7 @@ if [ -z "$CONTAINER_RUNNING" ]; then
         docker rm -f ${PROJECT_NAME}
 
         # start a new container
-        docker run -d --name ${PROJECT_NAME} -p 611:8081 ${DOCKER_HUB_USER_NAME}/${PROJECT_NAME}:${PROJECT_VERSION}
+        docker run -d --name ${PROJECT_NAME} -p 610:8080 ${DOCKER_HUB_USER_NAME}/${PROJECT_NAME}:${PROJECT_VERSION}
 
         echo "Container restarted successfully."
 else
