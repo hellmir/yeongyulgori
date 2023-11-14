@@ -38,17 +38,12 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-<<<<<<< HEAD
-                    def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}"
-                    sh "docker build --no-cache -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
-=======
                     def cacheBust = sh(script: 'date +%s', returnStdout: true).trim()
                     def dockerImageTag = "${env.PROJECT_NAME}:${env.PROJECT_VERSION}-${cacheBust}"
                     env.DOCKER_IMAGE_TAG = dockerImageTag
                     sh "docker system prune -a -f"
                     sh "docker rmi $DOCKER_HUB_USER_NAME/${dockerImageTag} || true"
                     sh "docker build --no-cache=true --build-arg CACHEBUST=${cacheBust} --build-arg JAR_FILE=${env.JAR_PATH} -t ${dockerImageTag} -f ${WORKSPACE}/${env.PROJECT_NAME}/Dockerfile ${WORKSPACE}/${env.PROJECT_NAME}/build/libs/"
->>>>>>> 13d8f9c35955f1732a62bdd1e1d68dbaf14027db
                 }
             }
         }
