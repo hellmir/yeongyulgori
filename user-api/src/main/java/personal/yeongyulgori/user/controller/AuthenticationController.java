@@ -63,7 +63,7 @@ public class AuthenticationController {
     }
 
     @ApiOperation(value = "회원 개인정보 조회", notes = "사용자 이름을 입력해 회원 개인정보를 조회할 수 있습니다.")
-    @PreAuthorize("isAuthenticated() and (( #username == authentication.name ) or hasRole('ROLE_ADMIN'))")
+    @PreAuthorize("isAuthenticated() and (( #username == principal.username ) or hasRole('ROLE_ADMIN'))")
     @GetMapping("{username}/details")
     public ResponseEntity<UserResponseDto> getUserInformation
             (@PathVariable("username") @ApiParam(value = "사용자 이름", example = "gildong1234") String username) {
@@ -76,7 +76,7 @@ public class AuthenticationController {
 
     @ApiOperation(value = "회원 정보 수정",
             notes = "수정할 변수(id 제외)를 1개 또는 여러 개 입력해 회원 정보를 수정할 수 있습니다.")
-    @PreAuthorize("isAuthenticated() and (( #username == authentication.name ) or hasRole('ROLE_ADMIN'))")
+    @PreAuthorize("isAuthenticated() and (( #username == principal.username ) or hasRole('ROLE_ADMIN'))")
     @PatchMapping("{username}")
     public ResponseEntity<UserResponseDto> updateUserInformation
             (@PathVariable("username") @ApiParam(value = "사용자 이름", example = "gildong1234")
@@ -93,7 +93,7 @@ public class AuthenticationController {
     }
 
     @ApiOperation(value = "주요 회원 정보 수정", notes = "비밀번호를 입력해 하나의 중요한 회원 정보를 수정할 수 있습니다.")
-    @PreAuthorize("isAuthenticated() and (( #username == principal.name ) or hasRole('ROLE_ADMIN'))")
+    @PreAuthorize("isAuthenticated() and (( #username == principal.username ) or hasRole('ROLE_ADMIN'))")
     @PatchMapping("{username}/auth")
     public ResponseEntity<Void> updateUserInformationWithAuthentication
             (@PathVariable("username") @ApiParam(value = "사용자 이름", example = "gildong1234")
@@ -132,7 +132,7 @@ public class AuthenticationController {
     }
 
     @ApiOperation(value = "회원 탈퇴", notes = "비밀번호를 입력해 회원을 탈퇴할 수 있습니다.")
-    @PreAuthorize("isAuthenticated() and (( username == principal.name ) or hasRole('ROLE_ADMIN'))")
+    @PreAuthorize("isAuthenticated() and (( #username == principal.username ) or hasRole('ROLE_ADMIN'))")
     @DeleteMapping("{username}")
     public ResponseEntity<Void> deleteUser(
             @PathVariable("username") @ApiParam(value = "사용자 이름", example = "gildong1234") String username,
@@ -142,8 +142,8 @@ public class AuthenticationController {
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 
-    }
 
+    }
     private ResponseEntity<UserResponseDto> buildResponse(UserResponseDto userResponseDto) {
 
         URI location = ServletUriComponentsBuilder
