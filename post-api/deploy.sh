@@ -32,7 +32,7 @@ docker run -d \
     --name $PROJECT_NAME \
     --network=docker-network \
     -p 611:8081 \
-    -e SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/users \
+    -e SPRING_DATASOURCE_URL=jdbc:mysql://post-mysql-container:3306/users \
     -e SPRING_DATASOURCE_USERNAME=$DB_USER_NAME \
     -e SPRING_DATASOURCE_PASSWORD=$DB_USER_PASSWORD \
     -e EC2_IP=$EC2_IP \
