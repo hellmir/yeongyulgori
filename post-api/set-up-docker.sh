@@ -38,7 +38,7 @@ MYSQL_ROOT_PASSWORD=$1
 DB_USER_NAME=$2
 DB_USER_PASSWORD=$3
 
-if [ ! "$(docker ps -a | grep post-mysql-container)" ]; then
+if [ ! "$(docker ps -a | grep mysql-container)" ]; then
     echo "Starting MySQL container..."
     sudo docker run -d --name post-mysql-container --network=docker-network \
     -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
@@ -62,9 +62,9 @@ fi
 # run Redis container if not exists
 REDIS_PASSWORD=$4
 
-if [ ! "$(docker ps -a | grep post-redis-container)" ]; then
+if [ ! "$(docker ps -a | grep redis-container)" ]; then
     echo "Starting Redis container..."
-    sudo docker run -d --name post-redis-container --network=docker-network \
+    sudo docker run -d --name redis-container --network=docker-network \
     -e REDIS_PASSWORD=$REDIS_PASSWORD \
     redis:latest
 fi

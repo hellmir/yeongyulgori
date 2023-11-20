@@ -1,10 +1,13 @@
+ARG CACHEBUST=1
+ARG JAR_FILE
+
 FROM openjdk:11-jre-slim
 
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+ONBUILD RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY ./*.jar app.jar
+COPY ${JAR_FILE} app.jar
 
 EXPOSE 8081
 
