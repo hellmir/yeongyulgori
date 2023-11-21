@@ -22,10 +22,10 @@ public class InformationUpdateForm {
 
     private Address address;
 
-    @ApiModelProperty(value = "권한", example = "ROLE_BUSINESS_USER")
+    @ApiModelProperty(value = "권한", example = "[ROLE_BUSINESS_USER]")
     private List<Role> roles;
 
-    @ApiModelProperty(value = "Base64로 인코딩된 프로필 이미지 데이터 URI", example = "NewEncodedDataURI")
+    @ApiModelProperty(value = "Base64로 인코딩된 프로필 이미지 데이터 URI", example = "YourEncodedDataURI")
     private String profileImage;
 
 }
